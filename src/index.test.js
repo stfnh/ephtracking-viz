@@ -1,7 +1,7 @@
 import lib from './';
 
 describe('lib', () => {
-  it('returns hello world', () => {
-    expect(lib.createVisualization()).toEqual('Hello World');
+  it('should have a createVisualization function', () => {
+    expect(lib.createVisualization).toBeInstanceOf(Function);
   });
 });

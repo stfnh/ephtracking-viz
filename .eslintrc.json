@@ -2,9 +2,13 @@
   "extends": ["airbnb-base", "prettier"],
   "plugins": ["prettier", "jest"],
   "rules": {
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+    "no-console": "off"
   },
   "env": {
     "jest/globals": true
+  },
+  "globals": {
+    "fetch": false
   }
 }

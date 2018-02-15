@@ -10,7 +10,7 @@
     "test": "jest",
     "prebuild": "rimraf dist",
     "build": "npm-run-all --parallel build:*",
-    "build:main": "babel --copy-files --out-dir dist --ignore *.test.js src",
+    "build:main": "babel --plugins transform-async-to-generator --copy-files --out-dir dist --ignore *.test.js src",
     "build:umd": "webpack --output-filename index.umd.js",
     "build:umd.min": "webpack --output-filename index.umd.min.js -p",
     "travis-deploy-once": "travis-deploy-once",
@@ -23,6 +23,7 @@
     "babel-core": "6.26.0",
     "babel-jest": "22.2.2",
     "babel-loader": "7.1.2",
+    "babel-plugin-transform-async-to-generator": "6.24.1",
     "codecov": "3.0.0",
     "commitizen": "2.9.6",
     "cz-conventional-changelog": "2.1.0",
@@ -55,5 +56,9 @@
     "hooks": {
       "pre-commit": "yarn test"
     }
+  },
+  "dependencies": {
+    "babel-polyfill": "6.26.0",
+    "whatwg-fetch": "2.0.3"
   }
 }
