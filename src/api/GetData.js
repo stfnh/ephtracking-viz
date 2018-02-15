@@ -9,7 +9,6 @@ class GetData {
    * @memberof GetData
    */
   constructor(measureId, state) {
-    console.log(measureId, state);
     this.url = `https://ephtracking.cdc.gov/apigateway/api/v1/getData/${measureId}/${state}/0/ALL/0/json`;
     this.measureId = measureId;
     this.state = state;
@@ -18,7 +17,7 @@ class GetData {
   async fetchData() {
     try {
       const response = await fetch(this.url);
-      this.response = response.text();
+      this.response = await response.json();
       return this.response;
     } catch (e) {
       console.error(e);
@@ -28,6 +27,20 @@ class GetData {
 
   getResponse() {
     return this.response;
+  }
+
+  getPreparedData() {
+    let preparedData;
+    if (this.response.tableResult && this.response.tableResult.length > 0) {
+      preparedData = this.response.tableResult.map(item => ({
+        year: item.year,
+        dataValue: parseInt(item.dataValue, 10),
+        displayValue: item.displayValue
+      }));
+    } else {
+      preparedData = null;
+    }
+    return preparedData;
   }
 }
 

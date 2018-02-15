@@ -10,6 +10,7 @@ export default {
     library: 'ephtrackingViz',
     libraryExport: 'default'
   },
+  externals: { d3: 'd3' },
   devtool: 'source-map',
   module: {
     loaders: [{ test: /\.js$/, loader: 'babel-loader', include }]
