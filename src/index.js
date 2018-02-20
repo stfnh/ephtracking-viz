@@ -1,7 +1,6 @@
-import 'whatwg-fetch'; // fetch polyfill
-import 'babel-polyfill';
+// import 'babel-polyfill';
 
-import createVisualization from './createVisualization';
+import createVisualization from './visualizations';
 
 export default {
   createVisualization
