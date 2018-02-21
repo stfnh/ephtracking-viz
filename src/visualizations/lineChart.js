@@ -23,7 +23,7 @@ const lineChart = (container, data) => {
       // const height = .log(d3.select('.bar').node().style.width);
       // --- create d3 line chart ---
 
-      const svg = d3.select('svg');
+      const svg = d3.select(container);
       const margin = { top: 20, right: 20, bottom: 30, left: 50 };
       const width = +svg.attr('width') - margin.left - margin.right;
       const height = +svg.attr('height') - margin.top - margin.bottom;
