@@ -6,7 +6,7 @@ const createVisualization = (container, options) => {
       lineChart(container, options.data);
       break;
     default:
-      console.log('no such visualization type');
+      console.error('no such visualization type');
   }
 };
 
