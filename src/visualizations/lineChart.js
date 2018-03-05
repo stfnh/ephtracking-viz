@@ -1,5 +1,4 @@
 import * as d3 from 'd3';
-import ColorScheme from 'color-scheme';
 
 const lineChart = (container, data) => {
   const url = `https://ephtracking.cdc.gov/apigateway/api/v1/getData/${
@@ -11,7 +10,7 @@ const lineChart = (container, data) => {
     } else if (response.tableResult && response.tableResult.length > 0) {
       const preparedData = response.tableResult.map(item => ({
         year: item.year,
-        dataValue: parseFloat(item.dataValue),
+        dataValue: item.dataValue ? parseFloat(item.dataValue) : null,
         displayValue: item.displayValue,
         geo: item.geo,
         geoId: item.geoId,
@@ -23,12 +22,18 @@ const lineChart = (container, data) => {
       // --- create d3 line chart ---
 
       // color scheme
-      const scheme = new ColorScheme();
-      scheme
-        .from_hex('4863A0')
-        .scheme('tetrade')
-        .variation('pastel');
-      const colors = scheme.colors(); // array of 16 colors
+      const colors = [
+        '#c06568',
+        '#64ac48',
+        '#8361cc',
+        '#9a963f',
+        '#c167b1',
+        '#4aac8d',
+        '#d14076',
+        '#688bcd',
+        '#ce4f34',
+        '#c98743'
+      ];
 
       // create line chart
       const svg = d3.select(container);
@@ -65,19 +70,23 @@ const lineChart = (container, data) => {
       // draw lines
       const line = d3
         .line()
+        .defined(d => d.dataValue !== null)
         .x(d => x(d.year))
         .y(d => y(d.dataValue));
       const keys = Object.keys(lines);
       keys.forEach((key, index) => {
-        g
-          .append('path')
-          .datum(lines[key])
-          .attr('fill', 'none')
-          .attr('stroke', `#${colors[index]}`)
-          .attr('stroke-linejoin', 'round')
-          .attr('stroke-linecap', 'round')
-          .attr('stroke-width', 1.5)
-          .attr('d', line);
+        // up to 10
+        if (index < 10) {
+          g
+            .append('path')
+            .datum(lines[key])
+            .attr('fill', 'none')
+            .attr('stroke', colors[index])
+            .attr('stroke-linejoin', 'round')
+            .attr('stroke-linecap', 'round')
+            .attr('stroke-width', 1.5)
+            .attr('d', line);
+        }
       });
     } else {
       d3
