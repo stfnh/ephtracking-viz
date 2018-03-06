@@ -65,7 +65,8 @@ const lineChart = (container, data) => {
       g
         .append('g')
         .attr('transform', `translate(0, ${height})`)
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).ticks(d3.timeYear.every(1)));
+
       g.append('g').call(d3.axisLeft(y));
 
       // group data by state
