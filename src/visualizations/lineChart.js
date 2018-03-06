@@ -48,11 +48,14 @@ const lineChart = (container, data) => {
       const y = d3.scaleLinear().rangeRound([height, 0]);
 
       // prepare years for x axis (sort and unique values)
-      const years = preparedData
-        .map(d => d.year)
-        .sort()
-        .filter((item, pos, array) => !pos || item !== array[pos - 1]);
-      x.domain(years);
+      const years = preparedData.map(d => d.year);
+      const startYear = d3.min(years, d => parseInt(d, 10));
+      const endYear = d3.max(years, d => parseInt(d, 10));
+      const allYears = Array.from(
+        { length: endYear - startYear + 1 },
+        (v, k) => k + startYear
+      );
+      x.domain(allYears);
       y.domain(d3.extent(preparedData, d => d.dataValue));
 
       g
