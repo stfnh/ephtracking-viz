@@ -37,7 +37,7 @@ const lineChart = (container, data) => {
 
       // create line chart
       const svg = d3.select(container);
-      const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+      const margin = { top: 20, right: 20, bottom: 30, left: 80 };
       const width = +svg.attr('width') - margin.left - margin.right;
       const height = +svg.attr('height') - margin.top - margin.bottom;
       const g = svg
@@ -47,7 +47,12 @@ const lineChart = (container, data) => {
       const x = d3.scaleBand().range([0, width]);
       const y = d3.scaleLinear().rangeRound([height, 0]);
 
-      x.domain(preparedData.map(d => d.year));
+      // prepare years for x axis (sort and unique values)
+      const years = preparedData
+        .map(d => d.year)
+        .sort()
+        .filter((item, pos, array) => !pos || item !== array[pos - 1]);
+      x.domain(years);
       y.domain(d3.extent(preparedData, d => d.dataValue));
 
       g
@@ -66,6 +71,8 @@ const lineChart = (container, data) => {
           lines[item.geoId] = [item];
         }
       });
+
+      console.log(lines);
 
       // draw lines
       const line = d3
