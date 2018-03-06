@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import legend from 'd3-svg-legend';
 
 const lineChart = (container, data) => {
   const url = `https://ephtracking.cdc.gov/apigateway/api/v1/getData/${
@@ -37,14 +38,14 @@ const lineChart = (container, data) => {
 
       // create line chart
       const svg = d3.select(container);
-      const margin = { top: 20, right: 20, bottom: 30, left: 80 };
-      const width = +svg.attr('width') - margin.left - margin.right;
+      const margin = { top: 20, right: 180, bottom: 30, left: 80 };
+      const width = +svg.attr('width') - margin.left - margin.right - 10;
       const height = +svg.attr('height') - margin.top - margin.bottom;
       const g = svg
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-      const x = d3.scaleBand().range([0, width]);
+      const x = d3.scaleTime().range([0, width]);
       const y = d3.scaleLinear().rangeRound([height, 0]);
 
       // prepare years for x axis (sort and unique values)
@@ -53,35 +54,35 @@ const lineChart = (container, data) => {
       const endYear = d3.max(years, d => parseInt(d, 10));
       const allYears = Array.from(
         { length: endYear - startYear + 1 },
-        (v, k) => k + startYear
+        (v, k) => new Date(k + startYear, 0, 1)
       );
-      x.domain(allYears);
+
+      x
+        .domain([allYears[0], allYears[allYears.length - 1]])
+        .tickFormat(d3.timeFormat('%Y'));
       y.domain(d3.extent(preparedData, d => d.dataValue));
 
       g
         .append('g')
         .attr('transform', `translate(0, ${height})`)
-        .call(d3.axisBottom(x))
-        .select('.domain');
+        .call(d3.axisBottom(x));
       g.append('g').call(d3.axisLeft(y));
 
       // group data by state
       const lines = {};
       preparedData.forEach(item => {
-        if (lines[item.geoId]) {
-          lines[item.geoId].push(item);
+        if (lines[item.geo]) {
+          lines[item.geo].push(item);
         } else {
-          lines[item.geoId] = [item];
+          lines[item.geo] = [item];
         }
       });
-
-      console.log(lines);
 
       // draw lines
       const line = d3
         .line()
         .defined(d => d.dataValue !== null)
-        .x(d => x(d.year))
+        .x(d => x(new Date(d.year, 0, 1)))
         .y(d => y(d.dataValue));
       const keys = Object.keys(lines);
       keys.forEach((key, index) => {
@@ -98,6 +99,24 @@ const lineChart = (container, data) => {
             .attr('d', line);
         }
       });
+
+      // legend
+      const ordinal = d3
+        .scaleOrdinal()
+        .domain(Object.keys(lines))
+        .range(colors);
+
+      svg
+        .append('g')
+        .attr('class', 'legendOrdinal')
+        .attr(
+          'transform',
+          `translate(${width + margin.left + 10}, ${margin.top})`
+        );
+
+      const legendOrdinal = legend.legendColor().scale(ordinal);
+
+      svg.select('.legendOrdinal').call(legendOrdinal);
     } else {
       d3
         .select(container)

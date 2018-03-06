@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "babel-polyfill": "6.26.0",
-    "d3": "4.13.0"
+    "d3": "4.13.0",
+    "d3-svg-legend": "^2.25.5"
   }
 }
