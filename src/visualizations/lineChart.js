@@ -1,6 +1,8 @@
 import * as d3 from 'd3';
 import legend from 'd3-svg-legend';
 
+import './lineChart.css';
+
 const lineChart = (container, data) => {
   const url = `https://ephtracking.cdc.gov/apigateway/api/v1/getData/${
     data.measureId
@@ -38,8 +40,9 @@ const lineChart = (container, data) => {
 
       // create line chart
       const svg = d3.select(container);
-      const margin = { top: 20, right: 180, bottom: 30, left: 80 };
-      const width = +svg.attr('width') - margin.left - margin.right - 10;
+      const margin = { top: 20, right: 250, bottom: 30, left: 80, legend: 20 };
+      const width =
+        +svg.attr('width') - margin.left - margin.right - margin.legend;
       const height = +svg.attr('height') - margin.top - margin.bottom;
       const g = svg
         .append('g')
@@ -86,6 +89,7 @@ const lineChart = (container, data) => {
         .x(d => x(new Date(d.year, 0, 1)))
         .y(d => y(d.dataValue));
       const keys = Object.keys(lines);
+      const labels = [];
       keys.forEach((key, index) => {
         // up to 10
         if (index < 10) {
@@ -98,26 +102,29 @@ const lineChart = (container, data) => {
             .attr('stroke-linecap', 'round')
             .attr('stroke-width', 1.5)
             .attr('d', line);
+          const numberElements = lines[key].length;
+          const lastElement = lines[key][numberElements - 1];
+          labels.push(
+            `${key} ${lastElement.displayValue} (${lastElement.year})`
+          );
         }
       });
 
       // legend
       const ordinal = d3
         .scaleOrdinal()
-        .domain(Object.keys(lines))
+        .domain(labels)
         .range(colors);
 
       svg
         .append('g')
-        .attr('class', 'legendOrdinal')
+        .attr('class', 'legendLineChart')
         .attr(
           'transform',
-          `translate(${width + margin.left + 10}, ${margin.top})`
+          `translate(${width + margin.left + margin.legend}, ${margin.top})`
         );
-
       const legendOrdinal = legend.legendColor().scale(ordinal);
-
-      svg.select('.legendOrdinal').call(legendOrdinal);
+      svg.select('.legendLineChart').call(legendOrdinal);
     } else {
       d3
         .select(container)

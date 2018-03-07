@@ -13,6 +13,17 @@ export default {
   externals: { d3: 'd3' },
   devtool: 'source-map',
   module: {
-    loaders: [{ test: /\.js$/, loader: 'babel-loader', include }]
+    // loaders: [{ test: /\.js$/, loader: 'babel-loader', include }],
+    rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        include
+      },
+      {
+        test: /\.css$/,
+        loader: ['style-loader', 'css-loader']
+      }
+    ]
   }
 };
