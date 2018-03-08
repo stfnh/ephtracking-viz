@@ -88,6 +88,7 @@ const lineChart = (container, data) => {
         .defined(d => d.dataValue !== null)
         .x(d => x(new Date(d.year, 0, 1)))
         .y(d => y(d.dataValue));
+
       const keys = Object.keys(lines);
       const labels = [];
       keys.forEach((key, index) => {
@@ -100,13 +101,28 @@ const lineChart = (container, data) => {
             .attr('stroke', colors[index])
             .attr('stroke-linejoin', 'round')
             .attr('stroke-linecap', 'round')
-            .attr('stroke-width', 1.5)
+            .attr('stroke-width', 2)
             .attr('d', line);
+
           const numberElements = lines[key].length;
           const lastElement = lines[key][numberElements - 1];
           labels.push(
             `${key} ${lastElement.displayValue} (${lastElement.year})`
           );
+
+          // draw data dots
+          g
+            .selectAll(`.circle-${index}`)
+            .data(lines[key])
+            .enter()
+            .append('circle')
+            .attr('class', `.circle-${index}`)
+            .attr('cx', d => x(new Date(d.year, 0, 1)))
+            .attr('cy', d => y(d.dataValue))
+            .attr('r', 5)
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 2)
+            .attr('fill', colors[index]);
         }
       });
 
