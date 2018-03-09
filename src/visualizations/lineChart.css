@@ -1,4 +1,33 @@
-.legendLineChart {
-  font-size: 14px;
+.ephviz-label {
+  font-size: 12px;
   font-family: sans-serif;
+}
+
+.ephviz-overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.ephviz-hover-line {
+  stroke: #bababa;
+  stroke-width: 1.5px;
+  stroke-dasharray: 3,2;
+}
+
+.ephviz-axis line,
+.ephviz-axis path {
+  stroke: #bababa;
+}
+
+.ephviz-axis text {
+  fill: #bababa
+}
+
+.ephviz-grid-lines line {
+  stroke: #bababa;
+  shape-rendering: crispEdges;
+}
+
+.ephviz-grid-lines path {
+  stroke-width: 0;
 }

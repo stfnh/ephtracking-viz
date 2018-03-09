@@ -40,9 +40,10 @@ const lineChart = (container, data) => {
 
       // create line chart
       const svg = d3.select(container);
-      const margin = { top: 20, right: 250, bottom: 30, left: 80, legend: 20 };
+      const margin = { top: 20, right: 180, bottom: 30, left: 80 };
+      const marginLegend = 20;
       const width =
-        +svg.attr('width') - margin.left - margin.right - margin.legend;
+        +svg.attr('width') - margin.left - margin.right - marginLegend;
       const height = +svg.attr('height') - margin.top - margin.bottom;
       const g = svg
         .append('g')
@@ -65,12 +66,31 @@ const lineChart = (container, data) => {
         .tickFormat(d3.timeFormat('%Y'));
       y.domain(d3.extent(preparedData, d => d.dataValue));
 
+      const xAxis = d3.axisBottom(x).ticks(d3.timeYear.every(1));
+
       g
         .append('g')
         .attr('transform', `translate(0, ${height})`)
-        .call(d3.axisBottom(x).ticks(d3.timeYear.every(1)));
+        .attr('class', 'ephviz-axis')
+        .call(xAxis);
 
-      g.append('g').call(d3.axisLeft(y));
+      g
+        .append('g')
+        .attr('class', 'ephviz-axis')
+        .call(d3.axisLeft(y).ticks(5))
+        .select('.domain') // remove line from y-axis
+        .remove();
+
+      // grid lines
+      const gridLines = d3
+        .axisLeft(y)
+        .tickFormat('')
+        .ticks(5)
+        .tickSize(-width);
+      g
+        .append('g')
+        .attr('class', 'ephviz-grid-lines')
+        .call(gridLines);
 
       // group data by state
       const lines = {};
@@ -107,7 +127,7 @@ const lineChart = (container, data) => {
           const numberElements = lines[key].length;
           const lastElement = lines[key][numberElements - 1];
           labels.push(
-            `${key} ${lastElement.displayValue} (${lastElement.year})`
+            `${key}: ${lastElement.displayValue} (${lastElement.year})`
           );
 
           // draw data dots
@@ -116,7 +136,7 @@ const lineChart = (container, data) => {
             .data(lines[key])
             .enter()
             .append('circle')
-            .attr('class', `.circle-${index}`)
+            .attr('class', `.circle-${index} .circle`)
             .attr('cx', d => x(new Date(d.year, 0, 1)))
             .attr('cy', d => y(d.dataValue))
             .attr('r', 5)
@@ -126,21 +146,88 @@ const lineChart = (container, data) => {
         }
       });
 
-      // legend
-      const ordinal = d3
-        .scaleOrdinal()
-        .domain(labels)
-        .range(colors);
+      /* eslint-disable no-inner-declarations */
+      function createLegend(l) {
+        const ordinal = d3
+          .scaleOrdinal()
+          .domain(l)
+          .range(colors);
 
+        svg
+          .append('g')
+          .attr('class', 'legend')
+          .attr(
+            'transform',
+            `translate(${width + margin.left + marginLegend}, ${margin.top})`
+          );
+
+        const legendOrdinal = legend
+          .legendColor()
+          .scale(ordinal)
+          .classPrefix('ephviz-')
+          .labelWrap(150);
+
+        const svgLegend = svg.select('.legend').call(legendOrdinal);
+        svgLegend.exit().remove();
+      }
+
+      createLegend(labels);
+
+      // overlay and update legend on mouse move
+      // line to show on hover
+      const hoverLine = g
+        .append('line')
+        .attr('class', 'ephviz-hover-line')
+        .style('display', 'none')
+        .attr('x1', 0)
+        .attr('y1', 0)
+        .attr('x2', 0)
+        .attr('y2', height);
+
+      /* eslint-disable no-inner-declarations */
+      function mousemove() {
+        const x0 = x.invert(d3.mouse(this)[0]);
+        const bisectDate = d3.bisector(d => new Date(d.year, 0, 1)).left;
+        const i = bisectDate(preparedData, x0, 1);
+        let d;
+        // last element
+        if (i === preparedData.length) {
+          d = new Date(preparedData[i - 1].year, 0, 1);
+        } else {
+          const d0 = new Date(preparedData[i - 1].year, 0, 1);
+          const d1 = new Date(preparedData[i].year, 0, 1);
+          d = x0 - d0 > d1 - x0 ? d1 : d0;
+        }
+        // move line
+        hoverLine.attr('x1', x(d));
+        hoverLine.attr('x2', x(d));
+        // update legend
+        const newLabels = keys.map(key => {
+          const selectedYear = d.getFullYear().toString();
+          const entry = lines[key].find(
+            element => element.year === selectedYear
+          );
+          if (!entry) {
+            return `${key}: no data (${selectedYear})`;
+          }
+          return `${key}: ${entry.displayValue} (${entry.year})`;
+        });
+        createLegend(newLabels);
+      }
+
+      // overlay for mouseover events
       svg
-        .append('g')
-        .attr('class', 'legendLineChart')
-        .attr(
-          'transform',
-          `translate(${width + margin.left + margin.legend}, ${margin.top})`
-        );
-      const legendOrdinal = legend.legendColor().scale(ordinal);
-      svg.select('.legendLineChart').call(legendOrdinal);
+        .append('rect')
+        .attr('class', 'ephviz-overlay')
+        .attr('transform', `translate(${margin.left},${margin.top})`)
+        .attr('width', width)
+        .attr('height', height)
+        .on('mouseover', () => hoverLine.style('display', null))
+        .on('mouseout', () => {
+          hoverLine.style('display', 'none');
+          createLegend(labels);
+        })
+        .on('mousemove', mousemove);
     } else {
       d3
         .select(container)
