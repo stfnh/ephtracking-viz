@@ -12,7 +12,9 @@ const lineChart = (container, data) => {
       console.error(error);
     } else if (response.tableResult && response.tableResult.length > 0) {
       const preparedData = response.tableResult.map(item => ({
-        year: item.year,
+        // ToDo: Refactor and create Data object here
+        year: item.year.trim().substr(0, 4), // only get first year
+        label: item.year, // for measures over e.g. 5 years (2000 - 2005)
         dataValue: item.dataValue ? parseFloat(item.dataValue) : null,
         displayValue: item.displayValue,
         geo: item.geo,
@@ -21,7 +23,7 @@ const lineChart = (container, data) => {
         rollover: item.rollover[0]
       }));
       const sortedData = preparedData.sort((a, b) => a.year - b.year);
-      // data is in form: year, dataValue, displayValue (all string)
+      // data is in form: year, dataValue, displayValue (all string), sorted by year
       // const height = .log(d3.select('.bar').node().style.width);
       // --- create d3 line chart ---
 
@@ -128,7 +130,7 @@ const lineChart = (container, data) => {
           const numberElements = lines[key].length;
           const lastElement = lines[key][numberElements - 1];
           labels.push(
-            `${key}: ${lastElement.displayValue} (${lastElement.year})`
+            `${key}: ${lastElement.displayValue} (${lastElement.label})`
           );
 
           // draw data dots
@@ -211,7 +213,7 @@ const lineChart = (container, data) => {
           if (!entry) {
             return `${key}: no data (${selectedYear})`;
           }
-          return `${key}: ${entry.displayValue} (${entry.year})`;
+          return `${key}: ${entry.displayValue} (${entry.label})`;
         });
         createLegend(newLabels);
       }
