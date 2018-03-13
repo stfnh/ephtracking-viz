@@ -8,18 +8,16 @@ const prepareOptions = data => {
   if (!data.measureId) {
     throw new Error('data.measureId not defined');
   }
-  if (!data.temporal) {
-    throw new Error('data.temporal not defined');
-  }
   if (!data.geographicItemsFilter) {
     throw new Error('data.geographicItemsFilter not defined');
   }
 
-  let temporal;
+  // default temporal: all data from 2000
+  let temporal = data.temporal || `2000-${(new Date()).getFullYear()}`;
   // temporal can be either: string (one year YYYY), string (year range YYYY-YYYY), array of strings (years)
-  if (typeof data.temporal === 'string' && data.temporal.length === 9) {
+  if (typeof temporal === 'string' && temporal.length === 9) {
     // YYYY-YYYY
-    const [start, stop] = data.temporal.split('-');
+    const [start, stop] = temporal.split('-');
     if (start > stop) {
       throw new Error('data.temporal not valid');
     }
@@ -28,16 +26,12 @@ const prepareOptions = data => {
     for (let i = start; i <= stop; i++) {
       temporal.push(i.toString());
     }
-    // toodo: fill
   } else if (
-    !Array.isArray(data.temporal) &&
-    typeof data.temporal === 'string' &&
-    data.temporal.length !== 4
+    !Array.isArray(temporal) &&
+    typeof temporal === 'string' &&
+    temporal.length !== 4
   ) {
     throw new Error('data.temporal not valid');
-  } else {
-    /* eslint-disable prefer-destructuring */
-    temporal = data.temporal;
   }
 
   const options = {

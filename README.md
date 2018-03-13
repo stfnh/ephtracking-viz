@@ -76,7 +76,7 @@ Call the visualization library:
       // string of one fips code or an array of many fips codes (string)
       geographicItemsFilter: ['36005', '36047', '36081', '36085', '36061'], // NYC counties
 
-      // required
+      // optional, default 2000-present
       // array of years (string YYYY), date range in years (string YYYY-YYYY) or year (string YYYY)
       temporal: '2000-2014',
 
