@@ -54,12 +54,36 @@ Call the visualization library:
 
 ```
   var options = {
-  type: 'line-chart',
-  data: {
-    measureId: '58',
-    states: ['13', '12']
-    }
-  };
+
+    // required
+    // select type of visualization (at the moment only 'line-chart')
+    type: 'line-chart',
+
+    // define data parameter
+    data: {
+      // required
+      // the id of the measure to visualize
+      measureId: '551',
+
+      // optional, default '1' (state)
+      // set stratification level
+      stratificationLevelId: '2',
+
+      // optional, default '1' (state)
+      geographicTypeIdFilter: data.geographicTypeIdFilter || '1',
+
+      // required
+      // string of one fips code or an array of many fips codes (string)
+      geographicItemsFilter: ['36005', '36047', '36081', '36085', '36061'], // NYC counties
+
+      // required
+      // array of years (string YYYY), date range in years (string YYYY-YYYY) or year (string YYYY)
+      temporal: '2000-2014',
+
+      // optional, default '0', not smoothed
+      isSmoothed: '0'
+      }
+    };
   ephtrackingViz.createVisualization('svg#viz', options);
 ```
 

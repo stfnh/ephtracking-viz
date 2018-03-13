@@ -3,10 +3,70 @@ import legend from 'd3-svg-legend';
 
 import './lineChart.css';
 
+const prepareOptions = data => {
+  // check for required options
+  if (!data.measureId) {
+    throw new Error('data.measureId not defined');
+  }
+  if (!data.temporal) {
+    throw new Error('data.temporal not defined');
+  }
+  if (!data.geographicItemsFilter) {
+    throw new Error('data.geographicItemsFilter not defined');
+  }
+
+  let temporal;
+  // temporal can be either: string (one year YYYY), string (year range YYYY-YYYY), array of strings (years)
+  if (typeof data.temporal === 'string' && data.temporal.length === 9) {
+    // YYYY-YYYY
+    const [start, stop] = data.temporal.split('-');
+    if (start > stop) {
+      throw new Error('data.temporal not valid');
+    }
+    temporal = [];
+    /*eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }]*/
+    for (let i = start; i <= stop; i++) {
+      temporal.push(i.toString());
+    }
+    // toodo: fill
+  } else if (
+    !Array.isArray(data.temporal) &&
+    typeof data.temporal === 'string' &&
+    data.temporal.length !== 4
+  ) {
+    throw new Error('data.temporal not valid');
+  } else {
+    /* eslint-disable prefer-destructuring */
+    temporal = data.temporal;
+  }
+
+  const options = {
+    measureId: data.measureId, // required, no default
+    stratificationLevelId: data.stratificationLevelId || '1', // default state
+    geographicTypeIdFilter: data.geographicTypeIdFilter || '1', // default state
+    geographicItemsFilter: data.geographicItemsFilter, // required, no default; fips codes
+    temporal,
+    isSmoothed: data.isSmoothed || '0' // default not smoothed
+    // getFullCoreHolder not having any effect?
+    // getFullCoreHolder: data.getFullCoreHolder || '0' // default don't getFullCoreHolder
+    // variables: data.variables // not required, no default
+    // variables coming up in next version
+  };
+
+  return options;
+};
+
 const lineChart = (container, data) => {
-  const url = `https://ephtracking.cdc.gov/apigateway/api/v1/getData/${
-    data.measureId
-  }/${data.states}/0/ALL/0/json`;
+  // https://ephtracking.cdc.gov/apigateway/api/{version}/getCoreHolder/{measureId}
+  //  /{stratificationLevelId}/{geographicTypeIdFilter}/{geographicItemsFilter}/{temporal}
+  //  /{isSmoothed}/{getFullCoreHolder}[?apiToken][?Variables...]
+  const options = prepareOptions(data);
+
+  const url = `https://ephtracking.cdc.gov/apigateway/api/v1/getCoreHolder/${
+    options.measureId
+  }/${options.stratificationLevelId}/${options.geographicTypeIdFilter}/${
+    options.geographicItemsFilter
+  }/${options.temporal}/${options.isSmoothed}/0`;
   d3.json(url, (error, response) => {
     if (error) {
       console.error(error);

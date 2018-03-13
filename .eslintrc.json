@@ -3,7 +3,10 @@
   "plugins": ["prettier", "jest"],
   "rules": {
     "prettier/prettier": "error",
-    "no-console": "off"
+    "no-console": "off",
+    "no-plusplus": ["error", {
+      "allowForLoopAfterthoughts": "true"
+    }]
   },
   "env": {
     "jest/globals": true
