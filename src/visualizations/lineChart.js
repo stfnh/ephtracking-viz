@@ -20,6 +20,7 @@ const lineChart = (container, data) => {
         geoAbbreviation: item.geoAbbreviation,
         rollover: item.rollover[0]
       }));
+      const sortedData = preparedData.sort((a, b) => a.year - b.year);
       // data is in form: year, dataValue, displayValue (all string)
       // const height = .log(d3.select('.bar').node().style.width);
       // --- create d3 line chart ---
@@ -53,7 +54,7 @@ const lineChart = (container, data) => {
       const y = d3.scaleLinear().rangeRound([height, 0]);
 
       // prepare years for x axis (sort and unique values)
-      const years = preparedData.map(d => d.year);
+      const years = sortedData.map(d => d.year);
       const startYear = d3.min(years, d => parseInt(d, 10));
       const endYear = d3.max(years, d => parseInt(d, 10));
       const allYears = Array.from(
@@ -64,7 +65,7 @@ const lineChart = (container, data) => {
       x
         .domain([allYears[0], allYears[allYears.length - 1]])
         .tickFormat(d3.timeFormat('%Y'));
-      y.domain(d3.extent(preparedData, d => d.dataValue));
+      y.domain(d3.extent(sortedData, d => d.dataValue));
 
       const xAxis = d3.axisBottom(x).ticks(d3.timeYear.every(1));
 
@@ -94,7 +95,7 @@ const lineChart = (container, data) => {
 
       // group data by state
       const lines = {};
-      preparedData.forEach(item => {
+      sortedData.forEach(item => {
         if (lines[item.geo]) {
           lines[item.geo].push(item);
         } else {
@@ -188,14 +189,14 @@ const lineChart = (container, data) => {
       function mousemove() {
         const x0 = x.invert(d3.mouse(this)[0]);
         const bisectDate = d3.bisector(d => new Date(d.year, 0, 1)).left;
-        const i = bisectDate(preparedData, x0, 1);
+        const i = bisectDate(sortedData, x0, 1);
         let d;
         // last element
-        if (i === preparedData.length) {
-          d = new Date(preparedData[i - 1].year, 0, 1);
+        if (i === sortedData.length) {
+          d = new Date(sortedData[i - 1].year, 0, 1);
         } else {
-          const d0 = new Date(preparedData[i - 1].year, 0, 1);
-          const d1 = new Date(preparedData[i].year, 0, 1);
+          const d0 = new Date(sortedData[i - 1].year, 0, 1);
+          const d1 = new Date(sortedData[i].year, 0, 1);
           d = x0 - d0 > d1 - x0 ? d1 : d0;
         }
         // move line
