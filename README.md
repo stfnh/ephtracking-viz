@@ -36,7 +36,7 @@ npm install --save ephtracking-viz
 
 You can also use the latest relase from the global CDN [unpkg.com/ephtracking-viz](https://unpkg.com/ephtracking-viz/dist/index.umd.min.js):
 
-```
+```html
 <!-- D3 dependency -->
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <!-- ephtracking-viz library -->
@@ -52,7 +52,7 @@ Define a svg and specify the size for the visualization:
 
 Call the visualization library:
 
-```
+```javascript
   var options = {
 
     // required
@@ -70,7 +70,7 @@ Call the visualization library:
       stratificationLevelId: '2',
 
       // optional, default '1' (state)
-      geographicTypeIdFilter: data.geographicTypeIdFilter || '1',
+      geographicTypeIdFilter: '2',
 
       // required
       // string of one fips code or an array of many fips codes (string)
