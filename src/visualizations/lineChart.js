@@ -56,7 +56,7 @@ const lineChart = (container, data) => {
   //  /{isSmoothed}/{getFullCoreHolder}[?apiToken][?Variables...]
   const options = prepareOptions(data);
 
-  const url = `https://ephtracking.cdc.gov/apigateway/api/v1/getCoreHolder/${
+  const url = `https://ephtracking.cdc.gov/DataExplorer/getCoreHolder/${
     options.measureId
   }/${options.stratificationLevelId}/${options.geographicTypeIdFilter}/${
     options.geographicItemsFilter
