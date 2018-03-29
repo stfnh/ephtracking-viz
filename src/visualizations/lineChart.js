@@ -40,11 +40,8 @@ const prepareOptions = data => {
     geographicTypeIdFilter: data.geographicTypeIdFilter || '1', // default state
     geographicItemsFilter: data.geographicItemsFilter, // required, no default; fips codes
     temporal,
-    isSmoothed: data.isSmoothed || '0' // default not smoothed
-    // getFullCoreHolder not having any effect?
-    // getFullCoreHolder: data.getFullCoreHolder || '0' // default don't getFullCoreHolder
-    // variables: data.variables // not required, no default
-    // variables coming up in next version
+    isSmoothed: data.isSmoothed || '0', // default not smoothed
+    queryParams: data.queryParams ? `?${data.queryParams}` : '' // not required, no default
   };
 
   return options;
@@ -55,12 +52,11 @@ const lineChart = (container, data) => {
   //  /{stratificationLevelId}/{geographicTypeIdFilter}/{geographicItemsFilter}/{temporal}
   //  /{isSmoothed}/{getFullCoreHolder}[?apiToken][?Variables...]
   const options = prepareOptions(data);
-
   const url = `https://ephtracking.cdc.gov/DataExplorer/getCoreHolder/${
     options.measureId
   }/${options.stratificationLevelId}/${options.geographicTypeIdFilter}/${
     options.geographicItemsFilter
-  }/${options.temporal}/${options.isSmoothed}/0`;
+  }/${options.temporal}/${options.isSmoothed}/0${options.queryParams}`;
   d3.json(url, (error, response) => {
     if (error) {
       console.error(error);
@@ -74,8 +70,10 @@ const lineChart = (container, data) => {
         geo: item.geo,
         geoId: item.geoId,
         geoAbbreviation: item.geoAbbreviation,
+        lookupListId: item.groupById,
         rollover: item.rollover[0]
       }));
+      const { lookupList } = response;
       const sortedData = preparedData.sort((a, b) => a.year - b.year);
       // data is in form: year, dataValue, displayValue (all string), sorted by year
       // const height = .log(d3.select('.bar').node().style.width);
@@ -149,13 +147,14 @@ const lineChart = (container, data) => {
         .attr('class', 'ephviz-grid-lines')
         .call(gridLines);
 
-      // group data by state
+      // group data by state and stratification
       const lines = {};
       sortedData.forEach(item => {
-        if (lines[item.geo]) {
-          lines[item.geo].push(item);
+        const lineKey = `${item.geoId}-${item.lookupListId}`;
+        if (lines[lineKey]) {
+          lines[lineKey].push(item);
         } else {
-          lines[item.geo] = [item];
+          lines[lineKey] = [item];
         }
       });
 
@@ -183,8 +182,12 @@ const lineChart = (container, data) => {
 
           const numberElements = lines[key].length;
           const lastElement = lines[key][numberElements - 1];
+          const stratification = lookupList[lastElement.lookupListId] ?
+            lookupList[lastElement.lookupListId].map(i => i.itemName).join(', ') :
+            '';
+          const labelKey = stratification ? `${lastElement.geo}, ${stratification}` : lastElement.geo;
           labels.push(
-            `${key}: ${lastElement.displayValue} (${lastElement.label})`
+            `${labelKey}: ${lastElement.displayValue} (${lastElement.label})`
           );
 
           // draw data dots
@@ -259,15 +262,21 @@ const lineChart = (container, data) => {
         hoverLine.attr('x1', x(d));
         hoverLine.attr('x2', x(d));
         // update legend
-        const newLabels = keys.map(key => {
-          const selectedYear = d.getFullYear().toString();
-          const entry = lines[key].find(
-            element => element.year === selectedYear
-          );
-          if (!entry) {
-            return `${key}: no data (${selectedYear})`;
+        const newLabels = keys.map((key, index) => {
+          if (index < 10) {
+            const selectedYear = d.getFullYear().toString();
+            const entry = lines[key].find(
+              element => element.year === selectedYear
+            );
+            if (!entry) {
+              return `${key}: no data (${selectedYear})`;
+            }
+            const stratification = lookupList[entry.lookupListId] ?
+              lookupList[entry.lookupListId].map(i => i.itemName).join(', '):
+              null;
+            const labelKey = stratification ? `${entry.geo}, ${stratification}` : entry.geo;
+            return `${labelKey}: ${entry.displayValue} (${entry.label})`;
           }
-          return `${key}: ${entry.displayValue} (${entry.label})`;
         });
         createLegend(newLabels);
       }
