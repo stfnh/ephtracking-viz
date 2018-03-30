@@ -59,6 +59,9 @@ Call the visualization library:
     // select type of visualization (at the moment only 'line-chart')
     type: 'line-chart',
 
+    // add a title to the chart, optional but recommended
+    title: 'Age-adjusted rate of death from Ischemic Heart Disease among persons 35 and older per 100,000 population',
+
     // define data parameter
     data: {
       // required
@@ -81,7 +84,10 @@ Call the visualization library:
       temporal: '2000-2014',
 
       // optional, default '0', not smoothed
-      isSmoothed: '0'
+      isSmoothed: '0',
+
+      // optional, query parameters for stratifications like Gender or AgeGroup
+      queryParams: ''
       }
     };
   ephtrackingViz.createVisualization('svg#viz', options);

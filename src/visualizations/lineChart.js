@@ -47,10 +47,7 @@ const prepareOptions = data => {
   return options;
 };
 
-const lineChart = (container, data) => {
-  // https://ephtracking.cdc.gov/apigateway/api/{version}/getCoreHolder/{measureId}
-  //  /{stratificationLevelId}/{geographicTypeIdFilter}/{geographicItemsFilter}/{temporal}
-  //  /{isSmoothed}/{getFullCoreHolder}[?apiToken][?Variables...]
+const lineChart = (container, data, title) => {
   const options = prepareOptions(data);
   const url = `https://ephtracking.cdc.gov/DataExplorer/getCoreHolder/${
     options.measureId
@@ -76,9 +73,8 @@ const lineChart = (container, data) => {
       const { lookupList } = response;
       const sortedData = preparedData.sort((a, b) => a.year - b.year);
       // data is in form: year, dataValue, displayValue (all string), sorted by year
-      // const height = .log(d3.select('.bar').node().style.width);
-      // --- create d3 line chart ---
 
+      // --- create d3 line chart ---
       // color scheme
       const colors = [
         '#c06568',
@@ -93,17 +89,45 @@ const lineChart = (container, data) => {
         '#c98743'
       ];
 
-      // create line chart
+      // container
       const svg = d3.select(container);
-      const margin = { top: 20, right: 180, bottom: 30, left: 80 };
+      const top = title ? 50 : 20;
+      const margin = { top, right: 180, bottom: 30, left: 80 };
       const marginLegend = 20;
+      const marginTitle = 30;
+      const marginSource = 10;
       const width =
-        +svg.attr('width') - margin.left - margin.right - marginLegend;
-      const height = +svg.attr('height') - margin.top - margin.bottom;
+      +svg.attr('width') - margin.left - margin.right - marginLegend;
+      let height = +svg.attr('height') - margin.top - margin.bottom - marginSource;
+      
+      // create title
+      if (title) {
+        svg.append('text')
+          .attr('x', svg.attr('width')/2)
+          .attr('y', margin.top/2)
+          .attr('text-anchor', 'middle')
+          .attr('font-family', 'Verdana, Geneva, sans-serif')
+          .attr('font-size', '14px')
+          .text(title);
+      }
+
+      // create source at bottom
+      svg.append('a')
+        // .attr('transform', `translate(10, ${svg.attr('height') - 10})`)
+        .attr('xlink:href', 'https://ephtracking.cdc.gov')
+        .attr('target', '_blank')
+        .append('text')
+        .attr('x', 10)
+        .attr('y', svg.attr('height') - 10)
+        .attr('font-family', 'Verdana, Geneva, sans-serif')
+        .attr('font-size', '11px')
+        .attr('fill', '#808080')
+        .text('Source: National Environmental Public Health Tracking Network, CDC');
+      
+      // create line chart
       const g = svg
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
-
       const x = d3.scaleTime().range([0, width]);
       const y = d3.scaleLinear().rangeRound([height, 0]);
 
