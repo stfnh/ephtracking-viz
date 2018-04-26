@@ -57,8 +57,8 @@ const lineChart = (container, data, title) => {
   d3.json(url, (error, response) => {
     if (error) {
       console.error(error);
-    } else if (response.tableResult && response.tableResult.length > 0) {
-      const preparedData = response.tableResult.map(item => ({
+    } else if (response[response.tableReturnType] && response[response.tableReturnType].length > 0) {
+      const preparedData = response[response.tableReturnType].map(item => ({
         // ToDo: Refactor and create Data object here
         year: item.year.trim().substr(0, 4), // only get first year
         label: item.year, // for measures over e.g. 5 years (2000 - 2005)
@@ -68,7 +68,7 @@ const lineChart = (container, data, title) => {
         geoId: item.geoId,
         geoAbbreviation: item.geoAbbreviation,
         lookupListId: item.groupById,
-        rollover: item.rollover[0]
+        rollover: item.rollover
       }));
       const { lookupList } = response;
       const sortedData = preparedData.sort((a, b) => a.year - b.year);
@@ -211,7 +211,7 @@ const lineChart = (container, data, title) => {
             '';
           const labelKey = stratification ? `${lastElement.geo}, ${stratification}` : lastElement.geo;
           labels.push(
-            `${labelKey}: ${lastElement.displayValue} (${lastElement.label})`
+            `${labelKey} - ${lastElement.rollover}`
           );
 
           // draw data dots
@@ -299,7 +299,7 @@ const lineChart = (container, data, title) => {
               lookupList[entry.lookupListId].map(i => i.itemName).join(', '):
               null;
             const labelKey = stratification ? `${entry.geo}, ${stratification}` : entry.geo;
-            return `${labelKey}: ${entry.displayValue} (${entry.label})`;
+            return `${labelKey} - ${entry.rollover}`;
           }
         });
         createLegend(newLabels);
