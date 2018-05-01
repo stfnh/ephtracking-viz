@@ -63,7 +63,9 @@
   "dependencies": {
     "babel-polyfill": "6.26.0",
     "d3": "4.13.0",
-    "d3-svg-legend": "^2.25.5"
+    "d3-scale-chromatic": "^1.2.0",
+    "d3-svg-legend": "^2.25.5",
+    "topojson": "^3.0.2"
   },
   "jest": {
     "moduleNameMapper": {
