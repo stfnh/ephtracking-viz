@@ -68,17 +68,12 @@ const choropleth = (container, data, title) => {
         // === Create Choropleth Map ===
       let mapData = d3.map();
       let path = d3.geoPath();
-      const x = d3.scaleLinear()
-        .domain([1, 10])
-        .rangeRound([600, 860]);
 
       const min = d3.min(response[response.tableReturnType], d => parseInt(d.dataValue, 10));
       const max = d3.max(response[response.tableReturnType], d => parseInt(d.dataValue, 10));
-      const color = d3.scaleThreshold()
-      .domain(d3.range(min, max))
-      .range(d3Chromatic.schemeGreens[9]);
-      // var color = d3.scaleSequential(d3Chromatic.interpolatePiYG);
-      
+      const color = d3.scaleQuantile()
+        .domain(response[response.tableReturnType].map(d => d.dataValue))
+        .range(d3Chromatic.schemeGreens[9]);
       
       const ephdata = d3.map(response[response.tableReturnType], d => d.geoId);
       d3.queue()
