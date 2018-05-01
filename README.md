@@ -56,7 +56,7 @@ Call the visualization library:
   var options = {
 
     // required
-    // select type of visualization (at the moment only 'line-chart')
+    // select type of visualization ('line-chart' or 'choropleth')
     type: 'line-chart',
 
     // add a title to the chart, optional but recommended
@@ -69,24 +69,29 @@ Call the visualization library:
       measureId: '551',
 
       // optional, default '1' (state)
+      // '2': county
       // set stratification level
       stratificationLevelId: '2',
 
       // optional, default '1' (state)
+      // type 'choropleth: not supported
       geographicTypeIdFilter: '2',
 
       // required
       // string of one fips code or an array of many fips codes (string)
+      // type 'choropleth: not supported
       geographicItemsFilter: ['36005', '36047', '36081', '36085', '36061'], // NYC counties
 
       // optional, default 2000-present
       // array of years (string YYYY), date range in years (string YYYY-YYYY) or year (string YYYY)
+      // type 'choropleth' supports only single year (string YYYY)
       temporal: '2000-2014',
 
       // optional, default '0', not smoothed
       isSmoothed: '0',
 
       // optional, query parameters for stratifications like Gender or AgeGroup
+      // type 'choropleth: not supported
       queryParams: ''
       }
     };
