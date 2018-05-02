@@ -13,7 +13,7 @@ const prepareOptions = data => {
   }
 
   // default temporal: all data from 2000
-  let temporal = data.temporal || `2000-${(new Date()).getFullYear()}`;
+  let temporal = data.temporal || `2000-${new Date().getFullYear()}`;
   // temporal can be either: string (one year YYYY), string (year range YYYY-YYYY), array of strings (years)
   if (typeof temporal === 'string' && temporal.length === 9) {
     // YYYY-YYYY
@@ -57,7 +57,10 @@ const lineChart = (container, data, title) => {
   d3.json(url, (error, response) => {
     if (error) {
       console.error(error);
-    } else if (response[response.tableReturnType] && response[response.tableReturnType].length > 0) {
+    } else if (
+      response[response.tableReturnType] &&
+      response[response.tableReturnType].length > 0
+    ) {
       const preparedData = response[response.tableReturnType].map(item => ({
         // ToDo: Refactor and create Data object here
         year: item.year.trim().substr(0, 4), // only get first year
@@ -97,14 +100,16 @@ const lineChart = (container, data, title) => {
       const marginTitle = 30;
       const marginSource = 10;
       const width =
-      +svg.attr('width') - margin.left - margin.right - marginLegend;
-      let height = +svg.attr('height') - margin.top - margin.bottom - marginSource;
-      
+        +svg.attr('width') - margin.left - margin.right - marginLegend;
+      let height =
+        +svg.attr('height') - margin.top - margin.bottom - marginSource;
+
       // create title
       if (title) {
-        svg.append('text')
-          .attr('x', svg.attr('width')/2)
-          .attr('y', margin.top/2)
+        svg
+          .append('text')
+          .attr('x', svg.attr('width') / 2)
+          .attr('y', margin.top / 2)
           .attr('text-anchor', 'middle')
           .attr('font-family', 'Verdana, Geneva, sans-serif')
           .attr('font-size', '14px')
@@ -112,7 +117,8 @@ const lineChart = (container, data, title) => {
       }
 
       // create source at bottom
-      svg.append('a')
+      svg
+        .append('a')
         // .attr('transform', `translate(10, ${svg.attr('height') - 10})`)
         .attr('xlink:href', 'https://ephtracking.cdc.gov')
         .attr('target', '_blank')
@@ -122,8 +128,10 @@ const lineChart = (container, data, title) => {
         .attr('font-family', 'Verdana, Geneva, sans-serif')
         .attr('font-size', '11px')
         .attr('fill', '#808080')
-        .text('Source: National Environmental Public Health Tracking Network, CDC');
-      
+        .text(
+          'Source: National Environmental Public Health Tracking Network, CDC'
+        );
+
       // create line chart
       const g = svg
         .append('g')
@@ -206,13 +214,15 @@ const lineChart = (container, data, title) => {
 
           const numberElements = lines[key].length;
           const lastElement = lines[key][numberElements - 1];
-          const stratification = lookupList[lastElement.lookupListId] ?
-            lookupList[lastElement.lookupListId].map(i => i.itemName).join(', ') :
-            '';
-          const labelKey = stratification ? `${lastElement.geo}, ${stratification}` : lastElement.geo;
-          labels.push(
-            `${labelKey} - ${lastElement.rollover}`
-          );
+          const stratification = lookupList[lastElement.lookupListId]
+            ? lookupList[lastElement.lookupListId]
+                .map(i => i.itemName)
+                .join(', ')
+            : '';
+          const labelKey = stratification
+            ? `${lastElement.geo}, ${stratification}`
+            : lastElement.geo;
+          labels.push(`${labelKey} - ${lastElement.rollover}`);
 
           // draw data dots
           g
@@ -295,10 +305,12 @@ const lineChart = (container, data, title) => {
             if (!entry) {
               return `${key}: no data (${selectedYear})`;
             }
-            const stratification = lookupList[entry.lookupListId] ?
-              lookupList[entry.lookupListId].map(i => i.itemName).join(', '):
-              null;
-            const labelKey = stratification ? `${entry.geo}, ${stratification}` : entry.geo;
+            const stratification = lookupList[entry.lookupListId]
+              ? lookupList[entry.lookupListId].map(i => i.itemName).join(', ')
+              : null;
+            const labelKey = stratification
+              ? `${entry.geo}, ${stratification}`
+              : entry.geo;
             return `${labelKey} - ${entry.rollover}`;
           }
         });
