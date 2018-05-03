@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import * as d3Chromatic from 'd3-scale-chromatic';
 import * as topojson from 'topojson';
+import legend from 'd3-svg-legend';
 
 import './choropleth.css';
 
@@ -43,19 +44,37 @@ const choropleth = (container, data, title) => {
       const top = title ? 50 : 20;
       const margin = { top, right: 20, bottom: 20, left: 20 };
       const width = +svg.attr('width') - margin.left - margin.right;
-      let height = +svg.attr('height') - margin.top - margin.bottom;
+      const height = +svg.attr('height') - margin.top - margin.bottom;
 
-      // create title
-      if (title) {
-        svg
-          .append('text')
-          .attr('x', svg.attr('width') / 2)
-          .attr('y', margin.top / 2)
-          .attr('text-anchor', 'middle')
-          .attr('font-family', 'Verdana, Geneva, sans-serif')
-          .attr('font-size', '14px')
-          .text(title);
-      }
+      const x = d3
+        .scaleLinear()
+        .domain([1, 10])
+        .rangeRound([600, 860]);
+
+      // color scheme
+      const color = d3
+        .scaleQuantile()
+        .domain(response[response.tableReturnType].map(d => d.dataValue))
+        .range(d3Chromatic.schemeGreens[9]);
+
+      // create legend
+      svg
+        .append('g')
+        .attr('class', 'legendMap')
+        .attr('transform', 'translate(1000, 20)');
+
+      const legendMap = legend
+        .legendColor()
+        .title(title || 'Legend')
+        .titleWidth(120)
+        .shapeWidth(30)
+        .classPrefix('ephviz-')
+        .cells(10)
+        .scale(color);
+
+      svg.select('.legendMap').call(legendMap);
+
+      
 
       // create source at bottom
       svg
@@ -74,8 +93,9 @@ const choropleth = (container, data, title) => {
         );
 
       // === Create Choropleth Map ===
-      let mapData = d3.map();
       let path = d3.geoPath();
+
+      let mapData = d3.map();
 
       const min = d3.min(response[response.tableReturnType], d =>
         parseInt(d.dataValue, 10)
@@ -83,15 +103,11 @@ const choropleth = (container, data, title) => {
       const max = d3.max(response[response.tableReturnType], d =>
         parseInt(d.dataValue, 10)
       );
-      const color = d3
-        .scaleQuantile()
-        .domain(response[response.tableReturnType].map(d => d.dataValue))
-        .range(d3Chromatic.schemeGreens[9]);
 
       const ephdata = d3.map(response[response.tableReturnType], d => d.geoId);
       d3
         .queue()
-        .defer(d3.json, 'https://d3js.org/us-10m.v1.json')
+        .defer(d3.json, 'https://unpkg.com/us-atlas@1.0.2/us/10m.json')
         .await((error, us) => {
           if (error) throw error;
           // COUNTIES
