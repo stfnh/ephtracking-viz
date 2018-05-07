@@ -47,16 +47,11 @@ const choropleth = (container, data, title) => {
       const width = +svg.attr('width') - margin.left - margin.right;
       const height = +svg.attr('height') - margin.top - margin.bottom;
 
-      const x = d3
-        .scaleLinear()
-        .domain([1, 10])
-        .rangeRound([600, 860]);
-
       // color scheme
       const color = d3
         .scaleQuantile()
         .domain(response[response.tableReturnType].map(d => d.dataValue))
-        .range(d3Chromatic.schemeGreens[9]);
+        .range(d3Chromatic.schemeYlGn[8]);
 
       // create legend
       svg
@@ -64,9 +59,10 @@ const choropleth = (container, data, title) => {
         .attr('class', 'legendMap')
         .attr('transform', 'translate(1000, 20)');
 
+      const legentTitle = title ? `${title} (${options.temporal})` : `Legend (${options.temporal})`;
       const legendMap = legend
         .legendColor()
-        .title(title || 'Legend')
+        .title(legentTitle)
         .titleWidth(120)
         .shapeWidth(30)
         .classPrefix('ephviz-')
@@ -161,7 +157,7 @@ const choropleth = (container, data, title) => {
                 if (data) {
                   return color(data.dataValue);
                 }
-                return 'grey';
+                return 'lightgrey';
               })
               .attr('d', path)
               .on('mouseover', tip.show)
