@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import * as d3Chromatic from 'd3-scale-chromatic';
+import d3Tip from 'd3-tip';
 import * as topojson from 'topojson';
 import legend from 'd3-svg-legend';
 
@@ -74,8 +75,6 @@ const choropleth = (container, data, title) => {
 
       svg.select('.legendMap').call(legendMap);
 
-      
-
       // create source at bottom
       svg
         .append('a')
@@ -104,6 +103,18 @@ const choropleth = (container, data, title) => {
         parseInt(d.dataValue, 10)
       );
 
+      /* Initialize tooltip */
+      const tip = d3Tip()
+        .attr('class', 'd3-tip')
+        .html(d => {
+          const data = ephdata.get(d.id);
+          if (data) {
+            return `${data.rollover} (${data.title})`;
+          }
+          return 'no data';
+        });
+      svg.call(tip);
+
       const ephdata = d3.map(response[response.tableReturnType], d => d.geoId);
       d3
         .queue()
@@ -124,17 +135,11 @@ const choropleth = (container, data, title) => {
                 if (data) {
                   return color(data.dataValue);
                 }
-                return 'grey';
+                return 'lightgrey';
               })
               .attr('d', path)
-              .append('title')
-              .text(d => {
-                const data = ephdata.get(d.id);
-                if (data) {
-                  return `${data.rollover}`;
-                }
-                return 'no data';
-              });
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide);
 
             // draw state border
             svg
@@ -159,14 +164,8 @@ const choropleth = (container, data, title) => {
                 return 'grey';
               })
               .attr('d', path)
-              .append('title')
-              .text(d => {
-                const data = ephdata.get(d.id);
-                if (data) {
-                  return `${data.rollover}`;
-                }
-                return 'no data';
-              });
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide);
           }
         });
     } else {
