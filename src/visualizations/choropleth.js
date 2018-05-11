@@ -11,14 +11,30 @@ const prepareOptions = data => {
   if (!data.measureId) {
     throw new Error('data.measureId not defined');
   }
-  // only supports one year at the moment (YYYY)
-  if (typeof data.temporal !== 'string' || data.temporal.length !== 4) {
+  let temporal = data.temporal || `2000-${new Date().getFullYear()}`;
+  // temporal can be either: string (one year YYYY), string (year range YYYY-YYYY), array of strings (years)
+  if (typeof temporal === 'string' && temporal.length === 9) {
+    // YYYY-YYYY
+    const [start, stop] = temporal.split('-');
+    if (start > stop) {
+      throw new Error('data.temporal not valid');
+    }
+    temporal = [];
+    /*eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }]*/
+    for (let i = start; i <= stop; i++) {
+      temporal.push(i.toString());
+    }
+  } else if (
+    !Array.isArray(temporal) &&
+    typeof temporal === 'string' &&
+    temporal.length !== 4
+  ) {
     throw new Error('data.temporal not valid');
   }
   const options = {
     measureId: data.measureId, // required, no default
     stratificationLevelId: data.stratificationLevelId || '1', // default state
-    temporal: data.temporal,
+    temporal,
     isSmoothed: data.isSmoothed || '0', // default not smoothed
     queryParams: data.queryParams ? `?${data.queryParams}` : '' // not required, no default
   };
@@ -59,7 +75,9 @@ const choropleth = (container, data, title) => {
         .attr('class', 'legendMap')
         .attr('transform', 'translate(1000, 20)');
 
-      const legentTitle = title ? `${title} (${options.temporal})` : `Legend (${options.temporal})`;
+      const legentTitle = title
+        ? `${title} (${options.temporal})`
+        : `Legend (${options.temporal})`;
       const legendMap = legend
         .legendColor()
         .title(legentTitle)
@@ -89,7 +107,6 @@ const choropleth = (container, data, title) => {
 
       // === Create Choropleth Map ===
       let path = d3.geoPath();
-
       let mapData = d3.map();
 
       const min = d3.min(response[response.tableReturnType], d =>
@@ -111,58 +128,90 @@ const choropleth = (container, data, title) => {
         });
       svg.call(tip);
 
-      const ephdata = d3.map(response[response.tableReturnType], d => d.geoId);
+      // map by geoId
+      console.log(response[response.tableReturnType]);
+      // const ephdata = d3.map(response[response.tableReturnType], d => d.geoId);
+      const ephdata = d3
+        .nest()
+        .key(d => d.geoId)
+        .entries(response[response.tableReturnType]);
+      console.log(ephdata);
+
+      const drawMap = (us, year) => {
+        console.log(us);
+        console.log(year);
+        if (data.stratificationLevelId === '2') {
+          svg
+            .append('g')
+            .attr('class', 'counties')
+            .selectAll('path')
+            .data(topojson.feature(us, us.objects.counties).features)
+            .enter()
+            .append('path')
+            .attr('fill', d => {
+              const data = ephdata.find(entry => entry.key === d.id);
+              if (data) {
+                const yearsDatum = data.values.find(item => item.year === year.toString());
+                if (yearsDatum) {
+                  return color(yearsDatum.dataValue);
+                }
+              }
+              return 'lightgrey';
+            })
+            .attr('d', path)
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide);
+
+          // draw state border
+          svg
+            .append('path')
+            .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+            .attr('class', 'states')
+            .attr('d', path);
+        } else if (data.stratificationLevelId === '1') {
+          // STATES
+          svg
+            .append('g')
+            .attr('class', 'states')
+            .selectAll('path')
+            .data(topojson.feature(us, us.objects.states).features)
+            .enter()
+            .append('path')
+            .attr('fill', d => {
+              const data = ephdata.find(entry => entry.key === d.id);
+              if (data) {
+                const yearsDatum = data.values.find(item => item.year === year.toString());
+                if (yearsDatum) {
+                  return color(yearsDatum.dataValue);
+                }
+              }
+              return 'lightgrey';
+            })
+            .attr('d', path)
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide);
+        }
+      };
+
       d3
         .queue()
         .defer(d3.json, 'https://unpkg.com/us-atlas@1.0.2/us/10m.json')
         .await((error, us) => {
           if (error) throw error;
+          // ToDo: create draw function, call with timeout for multiple years
           // COUNTIES
-          if (data.stratificationLevelId === '2') {
-            svg
-              .append('g')
-              .attr('class', 'counties')
-              .selectAll('path')
-              .data(topojson.feature(us, us.objects.counties).features)
-              .enter()
-              .append('path')
-              .attr('fill', d => {
-                const data = ephdata.get(d.id);
-                if (data) {
-                  return color(data.dataValue);
-                }
-                return 'lightgrey';
-              })
-              .attr('d', path)
-              .on('mouseover', tip.show)
-              .on('mouseout', tip.hide);
-
-            // draw state border
-            svg
-              .append('path')
-              .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
-              .attr('class', 'states')
-              .attr('d', path);
-          } else if (data.stratificationLevelId === '1') {
-            // STATES
-            svg
-              .append('g')
-              .attr('class', 'states')
-              .selectAll('path')
-              .data(topojson.feature(us, us.objects.states).features)
-              .enter()
-              .append('path')
-              .attr('fill', d => {
-                const data = ephdata.get(d.id);
-                if (data) {
-                  return color(data.dataValue);
-                }
-                return 'lightgrey';
-              })
-              .attr('d', path)
-              .on('mouseover', tip.show)
-              .on('mouseout', tip.hide);
-          }
+          let i = 0;
+          let max = options.temporal.length ;
+          const firstYear = Number.parseInt(options.temporal[0], 10);
+          const interval = setInterval(() => {
+            drawMap(us, firstYear + i);
+            i++;
+            console.log(i)
+            console.log(max);
+            if (i === max) {
+              clearInterval(interval);
+            }
+          }, 2000);
         });
     } else {
       d3
