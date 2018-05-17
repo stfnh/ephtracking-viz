@@ -198,6 +198,7 @@ const choropleth = (container, data, title) => {
             .data(topojson.feature(us, us.objects.states).features)
             .enter()
             .append('path')
+            .attr('class', 'state')
             .attr('fill', d => {
               const data = ephdata.find(entry => entry.key === d.id);
               if (data) {
@@ -216,27 +217,48 @@ const choropleth = (container, data, title) => {
         }
       };
 
+      const animateMap = () => {        
+        let i = 0;
+        let max = Array.isArray(options.temporal)
+          ? options.temporal.length
+          : 1;
+        const firstYear = Number.parseInt(year, 10);
+        const interval = setInterval(() => {
+          year = firstYear + i;
+
+          svg
+            .selectAll('.state')
+            .transition()
+            .duration(500)
+            .attr('fill', d => {
+              const data = ephdata.find(entry => entry.key === d.id);
+              if (data) {
+                const yearsDatum = data.values.find(
+                  item => item.year === year.toString()
+                );
+                if (yearsDatum) {
+                  return color(yearsDatum.dataValue);
+                }
+              }
+              return 'lightgrey';
+            });
+            // ToDo: Update mouseover
+          
+          i++;
+          if (i === max) {
+            clearInterval(interval);
+          }
+          svg.selectAll('.year').text(year);
+        }, 1500);
+      }
+
       d3
         .queue()
         .defer(d3.json, 'https://unpkg.com/us-atlas@1.0.2/us/10m.json')
         .await((error, us) => {
           if (error) throw error;
-          // ToDo: create draw function, call with timeout for multiple years
-          // COUNTIES
-          let i = 0;
-          let max = Array.isArray(options.temporal)
-            ? options.temporal.length
-            : 1;
-          const firstYear = Number.parseInt(year, 10);
-          const interval = setInterval(() => {
-            year = firstYear + i;
-            drawMap(us);
-            i++;
-            if (i === max) {
-              clearInterval(interval);
-            }
-            svg.selectAll('.year').text(year);
-          }, 1000);
+          drawMap(us);
+          animateMap();
         });
     } else {
       d3
