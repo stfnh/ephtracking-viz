@@ -62,6 +62,31 @@ const choropleth = (container, data, title) => {
       const margin = { top, right: 20, bottom: 20, left: 20 };
       const width = +svg.attr('width') - margin.left - margin.right;
       const height = +svg.attr('height') - margin.top - margin.bottom;
+      let year = Array.isArray(options.temporal)
+        ? options.temporal[0]
+        : options.temporal;
+
+      // create title
+      if (title) {
+        svg
+          .append('text')
+          .attr('x', svg.attr('width') / 2)
+          .attr('y', margin.top / 2)
+          .attr('text-anchor', 'middle')
+          .attr('font-family', 'Verdana, Geneva, sans-serif')
+          .attr('font-size', '14px')
+          .text(title);
+      }
+      // year
+      svg
+        .append('text')
+        .attr('class', 'year')
+        .attr('x', svg.attr('width') / 2)
+        .attr('y', margin.top / 2 + 17)
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Verdana, Geneva, sans-serif')
+        .attr('font-size', '14px')
+        .text(year);
 
       // color scheme
       const color = d3
@@ -75,18 +100,12 @@ const choropleth = (container, data, title) => {
         .attr('class', 'legendMap')
         .attr('transform', 'translate(1000, 20)');
 
-      const legentTitle = title
-        ? `${title} (${options.temporal})`
-        : `Legend (${options.temporal})`;
       const legendMap = legend
         .legendColor()
-        .title(legentTitle)
-        .titleWidth(120)
         .shapeWidth(30)
         .classPrefix('ephviz-')
         .cells(10)
         .scale(color);
-
       svg.select('.legendMap').call(legendMap);
 
       // create source at bottom
@@ -116,30 +135,30 @@ const choropleth = (container, data, title) => {
         parseInt(d.dataValue, 10)
       );
 
+      // map by geoId
+      const ephdata = d3
+        .nest()
+        .key(d => d.geoId)
+        .entries(response[response.tableReturnType]);
+
       /* Initialize tooltip */
       const tip = d3Tip()
         .attr('class', 'd3-tip')
         .html(d => {
-          const data = ephdata.get(d.id);
+          const data = ephdata.find(entry => entry.key === d.id);
           if (data) {
-            return `${data.rollover} (${data.title})`;
+            const yearsDatum = data.values.find(
+              item => item.year === year.toString()
+            );
+            if (yearsDatum) {
+              return `${yearsDatum.rollover} (${yearsDatum.title})`;
+            }
           }
           return 'no data';
         });
       svg.call(tip);
 
-      // map by geoId
-      console.log(response[response.tableReturnType]);
-      // const ephdata = d3.map(response[response.tableReturnType], d => d.geoId);
-      const ephdata = d3
-        .nest()
-        .key(d => d.geoId)
-        .entries(response[response.tableReturnType]);
-      console.log(ephdata);
-
-      const drawMap = (us, year) => {
-        console.log(us);
-        console.log(year);
+      const drawMap = us => {
         if (data.stratificationLevelId === '2') {
           svg
             .append('g')
@@ -151,7 +170,9 @@ const choropleth = (container, data, title) => {
             .attr('fill', d => {
               const data = ephdata.find(entry => entry.key === d.id);
               if (data) {
-                const yearsDatum = data.values.find(item => item.year === year.toString());
+                const yearsDatum = data.values.find(
+                  item => item.year === year.toString()
+                );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
                 }
@@ -180,7 +201,9 @@ const choropleth = (container, data, title) => {
             .attr('fill', d => {
               const data = ephdata.find(entry => entry.key === d.id);
               if (data) {
-                const yearsDatum = data.values.find(item => item.year === year.toString());
+                const yearsDatum = data.values.find(
+                  item => item.year === year.toString()
+                );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
                 }
@@ -201,17 +224,19 @@ const choropleth = (container, data, title) => {
           // ToDo: create draw function, call with timeout for multiple years
           // COUNTIES
           let i = 0;
-          let max = options.temporal.length ;
-          const firstYear = Number.parseInt(options.temporal[0], 10);
+          let max = Array.isArray(options.temporal)
+            ? options.temporal.length
+            : 1;
+          const firstYear = Number.parseInt(year, 10);
           const interval = setInterval(() => {
-            drawMap(us, firstYear + i);
+            year = firstYear + i;
+            drawMap(us);
             i++;
-            console.log(i)
-            console.log(max);
             if (i === max) {
               clearInterval(interval);
             }
-          }, 2000);
+            svg.selectAll('.year').text(year);
+          }, 1000);
         });
     } else {
       d3
