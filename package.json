@@ -13,6 +13,7 @@
     "build:main": "babel --plugins transform-async-to-generator --copy-files --out-dir dist --ignore *.test.js src",
     "build:umd": "webpack --output-filename index.umd.js",
     "build:umd.min": "webpack --output-filename index.umd.min.js -p",
+    "dev:umd": "webpack --watch --output-filename index.umd.js",
     "travis-deploy-once": "travis-deploy-once",
     "semantic-release": "semantic-release",
     "lint": "eslint src/**/*.js",

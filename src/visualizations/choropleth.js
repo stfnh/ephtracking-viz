@@ -142,7 +142,7 @@ const choropleth = (container, data, title) => {
         .entries(response[response.tableReturnType]);
 
       /* Initialize tooltip */
-      const tip = d3Tip()
+      let tip = d3Tip()
         .attr('class', 'd3-tip')
         .html(d => {
           const data = ephdata.find(entry => entry.key === d.id);
@@ -217,7 +217,7 @@ const choropleth = (container, data, title) => {
         }
       };
 
-      const animateMap = () => {        
+      const animateMap = us => {
         let i = 0;
         let max = Array.isArray(options.temporal)
           ? options.temporal.length
@@ -225,30 +225,72 @@ const choropleth = (container, data, title) => {
         const firstYear = Number.parseInt(year, 10);
         const interval = setInterval(() => {
           year = firstYear + i;
+          svg.selectAll('.year').text(year);
 
-          svg
-            .selectAll('.state')
-            .transition()
-            .duration(500)
-            .attr('fill', d => {
-              const data = ephdata.find(entry => entry.key === d.id);
-              if (data) {
-                const yearsDatum = data.values.find(
-                  item => item.year === year.toString()
-                );
-                if (yearsDatum) {
-                  return color(yearsDatum.dataValue);
+          // this way the tooltip updates while active
+          svg.select('.states').remove();
+
+          if (data.stratificationLevelId === '2') {
+            svg
+              .append('g')
+              .attr('class', 'counties')
+              .selectAll('path')
+              .data(topojson.feature(us, us.objects.counties).features)
+              .enter()
+              .append('path')
+              .attr('fill', d => {
+                const data = ephdata.find(entry => entry.key === d.id);
+                if (data) {
+                  const yearsDatum = data.values.find(
+                    item => item.year === year.toString()
+                  );
+                  if (yearsDatum) {
+                    return color(yearsDatum.dataValue);
+                  }
                 }
-              }
-              return 'lightgrey';
-            });
-            // ToDo: Update mouseover
-          
+                return 'lightgrey';
+              })
+              .attr('d', path)
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide);
+
+            // draw state border
+            svg
+              .append('path')
+              .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+              .attr('class', 'states')
+              .attr('d', path);
+          } else if (data.stratificationLevelId === '1') {
+            // STATES
+            svg
+              .append('g')
+              .attr('class', 'states')
+              .selectAll('path')
+              .data(topojson.feature(us, us.objects.states).features)
+              .enter()
+              .append('path')
+              .attr('class', 'state')
+              .attr('fill', d => {
+                const data = ephdata.find(entry => entry.key === d.id);
+                if (data) {
+                  const yearsDatum = data.values.find(
+                    item => item.year === year.toString()
+                  );
+                  if (yearsDatum) {
+                    return color(yearsDatum.dataValue);
+                  }
+                }
+                return 'lightgrey';
+              })
+              .attr('d', path)
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide);
+          }
+
           i++;
           if (i === max) {
             clearInterval(interval);
           }
-          svg.selectAll('.year').text(year);
         }, 1500);
       }
 
@@ -258,7 +300,7 @@ const choropleth = (container, data, title) => {
         .await((error, us) => {
           if (error) throw error;
           drawMap(us);
-          animateMap();
+          animateMap(us);
         });
     } else {
       d3
