@@ -62,9 +62,11 @@ const choropleth = (container, data, title) => {
       const margin = { top, right: 20, bottom: 20, left: 20 };
       const width = +svg.attr('width') - margin.left - margin.right;
       const height = +svg.attr('height') - margin.top - margin.bottom;
+      let active = d3.select(null);
       let year = Array.isArray(options.temporal)
         ? options.temporal[0]
         : options.temporal;
+      const mapGroup = svg.append('g');
 
       // create title
       if (title) {
@@ -126,7 +128,43 @@ const choropleth = (container, data, title) => {
 
       // === Create Choropleth Map ===
       let path = d3.geoPath();
-      let mapData = d3.map();
+
+      // zoom on click
+      function clicked (d) {
+        if (active.node() === this) return reset();
+        console.log(active.node());
+        active.classed('active', false);
+        active = d3.select(this).classed('active', true);
+        console.log(active);
+
+        var bounds = path.bounds(d),
+          dx = bounds[1][0] - bounds[0][0],
+          dy = bounds[1][1] - bounds[0][1],
+          x = (bounds[0][0] + bounds[1][0]) / 2,
+          y = (bounds[0][1] + bounds[1][1]) / 2,
+          scale = 0.9 / Math.max(dx / width, dy / height),
+          translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+        mapGroup
+          .transition()
+          .duration(750)
+          .style('stroke-width', 1.5 / scale + 'px')
+          .attr(
+            'transform',
+            'translate(' + translate + ')scale(' + scale + ')'
+          );
+      };
+
+      function reset() {
+        active.classed('active', false);
+        active = d3.select(null);
+
+        mapGroup
+          .transition()
+          .duration(750)
+          .style('stroke-width', '1.5px')
+          .attr('transform', '');
+      };
 
       const min = d3.min(response[response.tableReturnType], d =>
         parseInt(d.dataValue, 10)
@@ -160,7 +198,7 @@ const choropleth = (container, data, title) => {
 
       const drawMap = us => {
         if (data.stratificationLevelId === '2') {
-          svg
+          mapGroup
             .append('g')
             .attr('class', 'counties')
             .selectAll('path')
@@ -184,14 +222,14 @@ const choropleth = (container, data, title) => {
             .on('mouseout', tip.hide);
 
           // draw state border
-          svg
+          mapGroup
             .append('path')
             .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
             .attr('class', 'states')
             .attr('d', path);
         } else if (data.stratificationLevelId === '1') {
           // STATES
-          svg
+          mapGroup
             .append('g')
             .attr('class', 'states')
             .selectAll('path')
@@ -212,6 +250,7 @@ const choropleth = (container, data, title) => {
               return 'lightgrey';
             })
             .attr('d', path)
+            .on('click', clicked)
             .on('mouseover', tip.show)
             .on('mouseout', tip.hide);
         }
@@ -219,19 +258,17 @@ const choropleth = (container, data, title) => {
 
       const animateMap = us => {
         let i = 0;
-        let max = Array.isArray(options.temporal)
-          ? options.temporal.length
-          : 1;
+        let max = Array.isArray(options.temporal) ? options.temporal.length : 1;
         const firstYear = Number.parseInt(year, 10);
         const interval = setInterval(() => {
           year = firstYear + i;
           svg.selectAll('.year').text(year);
 
           // this way the tooltip updates while active
-          svg.select('.states').remove();
+          mapGroup.select('.states').remove();
 
           if (data.stratificationLevelId === '2') {
-            svg
+            mapGroup
               .append('g')
               .attr('class', 'counties')
               .selectAll('path')
@@ -255,14 +292,14 @@ const choropleth = (container, data, title) => {
               .on('mouseout', tip.hide);
 
             // draw state border
-            svg
+            mapGroup
               .append('path')
               .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
               .attr('class', 'states')
               .attr('d', path);
           } else if (data.stratificationLevelId === '1') {
             // STATES
-            svg
+            mapGroup
               .append('g')
               .attr('class', 'states')
               .selectAll('path')
@@ -270,6 +307,7 @@ const choropleth = (container, data, title) => {
               .enter()
               .append('path')
               .attr('class', 'state')
+              .on('click', clicked)
               .attr('fill', d => {
                 const data = ephdata.find(entry => entry.key === d.id);
                 if (data) {
@@ -292,7 +330,7 @@ const choropleth = (container, data, title) => {
             clearInterval(interval);
           }
         }, 1500);
-      }
+      };
 
       d3
         .queue()
