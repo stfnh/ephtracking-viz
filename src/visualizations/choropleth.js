@@ -56,6 +56,7 @@ const choropleth = (container, data, title) => {
       response[response.tableReturnType] &&
       response[response.tableReturnType].length > 0
     ) {
+      console.log(response[response.tableReturnType]);
       // container
       const svg = d3.select(container);
       const top = title ? 50 : 20;
@@ -184,7 +185,7 @@ const choropleth = (container, data, title) => {
           const data = ephdata.find(entry => entry.key === d.id);
           if (data) {
             const yearsDatum = data.values.find(
-              item => item.year === year.toString()
+              item => item.year.substr(item.year.length - 4) === year.toString()
             );
             if (yearsDatum) {
               return `${yearsDatum.rollover} (${yearsDatum.title})`;
@@ -207,7 +208,8 @@ const choropleth = (container, data, title) => {
               const data = ephdata.find(entry => entry.key === d.id);
               if (data) {
                 const yearsDatum = data.values.find(
-                  item => item.year === year.toString()
+                  // in case of a time period, eg '2000-2004'
+                  item => item.year.substr(item.year.length - 4) === year.toString()
                 );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
@@ -240,7 +242,7 @@ const choropleth = (container, data, title) => {
               const data = ephdata.find(entry => entry.key === d.id);
               if (data) {
                 const yearsDatum = data.values.find(
-                  item => item.year === year.toString()
+                  item => item.year.substr(item.year.length - 4) === year.toString()
                 );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
@@ -279,7 +281,7 @@ const choropleth = (container, data, title) => {
               const data = ephdata.find(entry => entry.key === d.id);
               if (data) {
                 const yearsDatum = data.values.find(
-                  item => item.year === yearCount.toString()
+                  item => item.year.substr(item.year.length - 4) === yearCount.toString()
                 );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
@@ -308,7 +310,7 @@ const choropleth = (container, data, title) => {
                 const data = ephdata.find(entry => entry.key === d.id);
                 if (data) {
                   const yearsDatum = data.values.find(
-                    item => item.year === yearCount.toString()
+                    item => item.year.substr(item.year.length - 4) === yearCount.toString()
                   );
                   if (yearsDatum) {
                     return color(yearsDatum.dataValue);
