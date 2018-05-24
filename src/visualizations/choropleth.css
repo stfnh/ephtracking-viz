@@ -30,3 +30,8 @@
   pointer-events: none;
 }
 
+.replay,
+.state,
+.county {
+  cursor: pointer;
+}

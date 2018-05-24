@@ -87,9 +87,9 @@ const choropleth = (container, data, title) => {
         .attr('y', margin.top / 2 + 17)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Verdana, Geneva, sans-serif')
-        .attr('font-size', '14px')
+        .attr('font-size', '16px')
         .text(year);
-
+      
       // color scheme
       const color = d3
         .scaleQuantile()
@@ -132,10 +132,8 @@ const choropleth = (container, data, title) => {
       // zoom on click
       function clicked (d) {
         if (active.node() === this) return reset();
-        console.log(active.node());
         active.classed('active', false);
         active = d3.select(this).classed('active', true);
-        console.log(active);
 
         var bounds = path.bounds(d),
           dx = bounds[1][0] - bounds[0][0],
@@ -218,6 +216,7 @@ const choropleth = (container, data, title) => {
               return 'lightgrey';
             })
             .attr('d', path)
+            .on('click', clicked)
             .on('mouseover', tip.show)
             .on('mouseout', tip.hide);
 
@@ -259,51 +258,48 @@ const choropleth = (container, data, title) => {
       const animateMap = us => {
         let i = 0;
         let max = Array.isArray(options.temporal) ? options.temporal.length : 1;
-        const firstYear = Number.parseInt(year, 10);
+        let yearCount = Number.parseInt(year, 10);
         const interval = setInterval(() => {
-          year = firstYear + i;
-          svg.selectAll('.year').text(year);
+          yearCount = Number.parseInt(year, 10) + i;
+          svg.selectAll('.year').text(yearCount);
+          svg.selectAll('.replay').remove();
 
           // this way the tooltip updates while active
-          mapGroup.select('.states').remove();
-
+          
           if (data.stratificationLevelId === '2') {
+            mapGroup.selectAll('.counties').remove();
             mapGroup
-              .append('g')
-              .attr('class', 'counties')
-              .selectAll('path')
-              .data(topojson.feature(us, us.objects.counties).features)
-              .enter()
-              .append('path')
-              .attr('fill', d => {
-                const data = ephdata.find(entry => entry.key === d.id);
-                if (data) {
-                  const yearsDatum = data.values.find(
-                    item => item.year === year.toString()
-                  );
-                  if (yearsDatum) {
-                    return color(yearsDatum.dataValue);
-                  }
+            .append('g')
+            .attr('class', 'counties')
+            .selectAll('path')
+            .data(topojson.feature(us, us.objects.counties).features)
+            .enter()
+            .append('path')
+            .attr('fill', d => {
+              const data = ephdata.find(entry => entry.key === d.id);
+              if (data) {
+                const yearsDatum = data.values.find(
+                  item => item.year === yearCount.toString()
+                );
+                if (yearsDatum) {
+                  return color(yearsDatum.dataValue);
                 }
-                return 'lightgrey';
-              })
-              .attr('d', path)
-              .on('mouseover', tip.show)
-              .on('mouseout', tip.hide);
+              }
+              return 'lightgrey';
+            })
+            .attr('d', path)
+            .on('click', clicked)
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide);
 
-            // draw state border
-            mapGroup
-              .append('path')
-              .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
-              .attr('class', 'states')
-              .attr('d', path);
           } else if (data.stratificationLevelId === '1') {
             // STATES
+            mapGroup.select('.states').remove();
             mapGroup
-              .append('g')
-              .attr('class', 'states')
-              .selectAll('path')
-              .data(topojson.feature(us, us.objects.states).features)
+            .append('g')
+            .attr('class', 'states')
+            .selectAll('path')
+            .data(topojson.feature(us, us.objects.states).features)
               .enter()
               .append('path')
               .attr('class', 'state')
@@ -312,7 +308,7 @@ const choropleth = (container, data, title) => {
                 const data = ephdata.find(entry => entry.key === d.id);
                 if (data) {
                   const yearsDatum = data.values.find(
-                    item => item.year === year.toString()
+                    item => item.year === yearCount.toString()
                   );
                   if (yearsDatum) {
                     return color(yearsDatum.dataValue);
@@ -326,8 +322,20 @@ const choropleth = (container, data, title) => {
           }
 
           i++;
+          // done
           if (i === max) {
             clearInterval(interval);
+            // replay
+            svg
+            .append('text')
+            .attr('class', 'replay')
+            .attr('x', 30)
+            .attr('y', margin.top/2)
+            .attr('text-anchor', 'middle')
+            .attr('font-family', 'Verdana, Geneva, sans-serif')
+            .attr('font-size', '12px')
+            .text('Replay')
+            .on('click', () => animateMap(us));
           }
         }, 1500);
       };
