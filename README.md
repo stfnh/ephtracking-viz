@@ -84,14 +84,12 @@ Call the visualization library:
 
       // optional, default 2000-present
       // array of years (string YYYY), date range in years (string YYYY-YYYY) or year (string YYYY)
-      // type 'choropleth' supports only single year (string YYYY)
       temporal: '2000-2014',
 
       // optional, default '0', not smoothed
       isSmoothed: '0',
 
       // optional, query parameters for stratifications like Gender or AgeGroup
-      // type 'choropleth: not supported
       queryParams: ''
       }
     };
