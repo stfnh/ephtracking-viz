@@ -31,6 +31,10 @@ const prepareOptions = data => {
   ) {
     throw new Error('data.temporal not valid');
   }
+  // check queryParams: only support max one stratification / query parameter 
+  if (data.queryParams && (data.queryParams.match(',') || data.queryParams.match('&'))) {
+    throw new Error('only one stratificaiton and query paramter is allowed');
+  }
   const options = {
     measureId: data.measureId, // required, no default
     stratificationLevelId: data.stratificationLevelId || '1', // default state
@@ -72,10 +76,14 @@ const choropleth = (container, data, title) => {
       const width = +svg.attr('width') - margin.left - margin.right;
       const height = +svg.attr('height') - margin.top - margin.bottom;
       let active = d3.select(null);
-      let year = Array.isArray(options.temporal)
+      let startYear = Array.isArray(options.temporal)
         ? options.temporal[0]
         : options.temporal;
+      // let currentYear = year;
+      let currentYear = Number.parseInt(startYear, 10);
       const mapGroup = svg.append('g');
+      const responseData = response[response.tableReturnType];
+      const geographicTypeId = responseData[0].geographicTypeId;
 
       // create title
       if (title) {
@@ -96,13 +104,13 @@ const choropleth = (container, data, title) => {
         .attr('y', margin.top / 2 + 17)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Verdana, Geneva, sans-serif')
-        .attr('font-size', '16px')
-        .text(year);
+        .attr('font-size', '14px')
+        .text(currentYear);
 
       // color scheme
       const color = d3
         .scaleQuantile()
-        .domain(response[response.tableReturnType].map(d => d.dataValue))
+        .domain(responseData.map(d => d.dataValue))
         .range(d3Chromatic.schemeYlGn[8]);
 
       // create legend
@@ -173,10 +181,10 @@ const choropleth = (container, data, title) => {
           .attr('transform', '');
       }
 
-      const min = d3.min(response[response.tableReturnType], d =>
+      const min = d3.min(responseData, d =>
         parseInt(d.dataValue, 10)
       );
-      const max = d3.max(response[response.tableReturnType], d =>
+      const max = d3.max(responseData, d =>
         parseInt(d.dataValue, 10)
       );
 
@@ -184,7 +192,7 @@ const choropleth = (container, data, title) => {
       const ephdata = d3
         .nest()
         .key(d => d.geoId)
-        .entries(response[response.tableReturnType]);
+        .entries(responseData);
 
       /* Initialize tooltip */
       let tip = d3Tip()
@@ -193,7 +201,7 @@ const choropleth = (container, data, title) => {
           const data = ephdata.find(entry => entry.key === d.id);
           if (data) {
             const yearsDatum = data.values.find(
-              item => item.year.substr(item.year.length - 4) === year.toString()
+              item => item.year.substr(item.year.length - 4) === currentYear.toString()
             );
             if (yearsDatum) {
               return `${yearsDatum.rollover} (${yearsDatum.title})`;
@@ -204,7 +212,7 @@ const choropleth = (container, data, title) => {
       svg.call(tip);
 
       const drawMap = us => {
-        if (data.stratificationLevelId === '2') {
+        if (geographicTypeId === 2) {
           mapGroup
             .append('g')
             .attr('class', 'counties')
@@ -218,7 +226,7 @@ const choropleth = (container, data, title) => {
                 const yearsDatum = data.values.find(
                   // in case of a time period, eg '2000-2004'
                   item =>
-                    item.year.substr(item.year.length - 4) === year.toString()
+                    item.year.substr(item.year.length - 4) === startYear.toString()
                 );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
@@ -237,7 +245,7 @@ const choropleth = (container, data, title) => {
             .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
             .attr('class', 'states')
             .attr('d', path);
-        } else if (data.stratificationLevelId === '1') {
+        } else if (geographicTypeId === 1) {
           // STATES
           mapGroup
             .append('g')
@@ -252,7 +260,7 @@ const choropleth = (container, data, title) => {
               if (data) {
                 const yearsDatum = data.values.find(
                   item =>
-                    item.year.substr(item.year.length - 4) === year.toString()
+                    item.year.substr(item.year.length - 4) === startYear.toString()
                 );
                 if (yearsDatum) {
                   return color(yearsDatum.dataValue);
@@ -270,14 +278,14 @@ const choropleth = (container, data, title) => {
       const animateMap = us => {
         let i = 0;
         let max = Array.isArray(options.temporal) ? options.temporal.length : 1;
-        let yearCount = Number.parseInt(year, 10);
         const interval = setInterval(() => {
-          yearCount = Number.parseInt(year, 10) + i;
-          svg.selectAll('.year').text(yearCount);
+          currentYear = Number.parseInt(startYear, 10) + i;
+          svg.selectAll('.year').text(currentYear);
           svg.selectAll('.replay').remove();
 
-          // this way the tooltip updates while active
-          if (data.stratificationLevelId === '2') {
+          // we need to redraw almost everything, otherwise the tooltip won't update when hovered
+
+          if (geographicTypeId === 2) {
             mapGroup.selectAll('.states').remove();
             mapGroup.selectAll('.counties').remove();
             mapGroup
@@ -293,7 +301,7 @@ const choropleth = (container, data, title) => {
                   const yearsDatum = data.values.find(
                     item =>
                       item.year.substr(item.year.length - 4) ===
-                      yearCount.toString()
+                      currentYear.toString()
                   );
                   if (yearsDatum) {
                     return color(yearsDatum.dataValue);
@@ -312,7 +320,7 @@ const choropleth = (container, data, title) => {
             .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
             .attr('class', 'states')
             .attr('d', path);
-          } else if (data.stratificationLevelId === '1') {
+          } else if (geographicTypeId === 1) {
             // STATES
             mapGroup.select('.states').remove();
             mapGroup
@@ -330,7 +338,7 @@ const choropleth = (container, data, title) => {
                   const yearsDatum = data.values.find(
                     item =>
                       item.year.substr(item.year.length - 4) ===
-                      yearCount.toString()
+                      currentYear.toString()
                   );
                   if (yearsDatum) {
                     return color(yearsDatum.dataValue);
