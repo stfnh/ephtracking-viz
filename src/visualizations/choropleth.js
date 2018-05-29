@@ -277,8 +277,8 @@ const choropleth = (container, data, title) => {
           svg.selectAll('.replay').remove();
 
           // this way the tooltip updates while active
-
           if (data.stratificationLevelId === '2') {
+            mapGroup.selectAll('.states').remove();
             mapGroup.selectAll('.counties').remove();
             mapGroup
               .append('g')
