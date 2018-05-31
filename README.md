@@ -62,6 +62,16 @@ Call the visualization library:
     // add a title to the chart, optional but recommended
     title: 'Age-adjusted rate of death from Ischemic Heart Disease among persons 35 and older per 100,000 population',
 
+    // choropleth map only: show or hide legend, default true, optional
+    showLegend: true,
+
+    // choropleth map only, number of break groups, min 3, default 8, optional
+    breakGroups: 6,
+
+    // choropleth map only, name of color scheme, default 'schemeYlGn'
+    // names see https://github.com/d3/d3-scale-chromatic
+    colorScheme: 'schemePuBu',
+
     // define data parameter
     data: {
       // required
