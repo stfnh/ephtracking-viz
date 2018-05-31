@@ -7,7 +7,7 @@ const createVisualization = (container, options) => {
       lineChart(container, options.data, options.title);
       break;
     case 'choropleth':
-      choropleth(container, options.data, options.title);
+      choropleth(container, options.data, options.title, options.showLegend, options.breakGroups, options.colorScheme);
       break;
     default:
       console.error('no such visualization type');

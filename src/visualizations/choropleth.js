@@ -45,7 +45,7 @@ const prepareOptions = data => {
   return options;
 };
 
-const choropleth = (container, data, title) => {
+const choropleth = (container, data, title, showLegend = true, breakGroups = 8, colorScheme = 'schemeYlGn') => {
   const options = prepareOptions(data);
   const url = `https://ephtracking.cdc.gov/DataExplorer/getCoreHolder/${
     options.measureId
@@ -111,21 +111,23 @@ const choropleth = (container, data, title) => {
       const color = d3
         .scaleQuantile()
         .domain(responseData.map(d => d.dataValue))
-        .range(d3Chromatic.schemeYlGn[8]);
+        .range(d3Chromatic[colorScheme][breakGroups > 2 ? breakGroups : 8]);
 
       // create legend
-      svg
-        .append('g')
-        .attr('class', 'legendMap')
-        .attr('transform', 'translate(1000, 20)');
-
-      const legendMap = legend
-        .legendColor()
-        .shapeWidth(30)
-        .classPrefix('ephviz-')
-        .cells(10)
-        .scale(color);
-      svg.select('.legendMap').call(legendMap);
+      if (showLegend) {
+        svg
+          .append('g')
+          .attr('class', 'legendMap')
+          .attr('transform', 'translate(1000, 20)');
+  
+        const legendMap = legend
+          .legendColor()
+          .shapeWidth(30)
+          .classPrefix('ephviz-')
+          .cells(10)
+          .scale(color);
+        svg.select('.legendMap').call(legendMap);
+      }
 
       // create source at bottom
       svg
