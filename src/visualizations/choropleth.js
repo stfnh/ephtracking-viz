@@ -42,7 +42,6 @@ const prepareOptions = data => {
     isSmoothed: data.isSmoothed || '0', // default not smoothed
     queryParams: data.queryParams ? `?${data.queryParams}` : '' // not required, no default
   };
-
   return options;
 };
 
@@ -55,6 +54,7 @@ const choropleth = (container, data, title) => {
   }/0${options.queryParams}`;
   // container
   const svg = d3.select(container);
+  const isMultiYear = Array.isArray(options.temporal);
 
   svg
     .append('text')
@@ -276,10 +276,10 @@ const choropleth = (container, data, title) => {
       };
 
       const animateMap = us => {
-        let i = 0;
+        let i = 1; // first year is already rendered
         let max = Array.isArray(options.temporal) ? options.temporal.length : 1;
         const interval = setInterval(() => {
-          currentYear = Number.parseInt(startYear, 10) + i;
+          currentYear = Number.parseInt(options.temporal[i], 10);
           svg.selectAll('.year').text(currentYear);
           svg.selectAll('.replay').remove();
 
@@ -376,7 +376,9 @@ const choropleth = (container, data, title) => {
         .await((error, us) => {
           if (error) throw error;
           drawMap(us);
-          animateMap(us);
+          if (isMultiYear) {
+            animateMap(us);
+          }
         });
     } else {
       d3
