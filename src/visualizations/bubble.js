@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import d3Tip from 'd3-tip';
+import legend from 'd3-svg-legend';
 
 import population from './population';
 import regionsLookup from './regionsLookup';
@@ -7,7 +8,7 @@ import regionsLookup from './regionsLookup';
 const bubble = (container, data, title) => {
   // set margins
   const top = title ? 50 : 20;
-  const margin = { top, right: 30, bottom: 20, left: 30 };
+  const margin = { top, right: 100, bottom: 20, left: 30 };
 
   // prepare svg and g for drawing
   const svg = d3.select(container);
@@ -44,7 +45,6 @@ const bubble = (container, data, title) => {
         .attr('font-family', 'monospace')
         .text('no data');
     } else {
-
       console.log('done', xData, yData, population);
 
       // scales
@@ -55,7 +55,7 @@ const bubble = (container, data, title) => {
           d3.max(xData, d => d.dataValue)
         ])
         .range([0, width]);
-      
+
       const yScale = d3
         .scaleLinear()
         .domain([
@@ -66,12 +66,10 @@ const bubble = (container, data, title) => {
 
       const bubbleScale = d3
         .scaleLinear()
-        .domain([
-          d3.min(d3.values(population)),
-          d3.max(d3.values(population))
-        ])
-        .range([5,30]);
-      
+        .domain([d3.min(d3.values(population)), d3.max(d3.values(population))])
+        .range([5, 30]);
+
+      // fill regions
       const fillColor = d3
         .scaleOrdinal()
         .domain(['Northeast', 'Midwest', 'South', 'West'])
@@ -80,24 +78,25 @@ const bubble = (container, data, title) => {
         .scaleOrdinal()
         .domain(['Northeast', 'Midwest', 'South', 'West'])
         .range(['#7EC2E8', '#2D7265', '#B09439', '#9E3B34']);
-      
+
       // axis
       const xAxis = d3.axisBottom().scale(xScale);
-      g.append('g')
+      g
+        .append('g')
         .attr('class', 'axis')
         .attr('transform', `translate(0, ${height})`)
         .call(xAxis);
       const yAxis = d3.axisLeft().scale(yScale);
-      g.append('g')
+      g
+        .append('g')
         .attr('class', 'axis')
         .attr('transform', 'translate(0, 0)')
         .call(yAxis);
-      
+
       const tip = d3Tip()
         .attr('class', 'd3-tip')
         .html(d => `${d.geo}:<br>x: ${d.x.rollover}<br>y: ${d.y.rollover}`);
       svg.call(tip);
-
 
       // generate data pairs
       let data = [];
@@ -128,8 +127,19 @@ const bubble = (container, data, title) => {
         .style('stroke-width', '1px')
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide);
-    }
 
+      // create legend
+      svg
+        .append('g')
+        .attr('class', 'legendOrdinal')
+        .attr('transform', `translate(${width + margin.left + 10}, 20)`);
+      const legendOrdinal = legend
+        .legendColor()
+        .title('Legend')
+        .scale(fillColor);
+
+      svg.select('.legendOrdinal').call(legendOrdinal);
+    }
   });
 };
 
