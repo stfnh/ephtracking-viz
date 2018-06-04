@@ -1,206 +1,53 @@
-export default [
-  {
-    "state": "California",
-    "population": 39776830
-  },
-  {
-    "state": "Texas",
-    "population": 28704330
-  },
-  {
-    "state": "Florida",
-    "population": 21312211
-  },
-  {
-    "state": "New York",
-    "population": 19862512
-  },
-  {
-    "state": "Pennsylvania",
-    "population": 12823989
-  },
-  {
-    "state": "Illinois",
-    "population": 12768320
-  },
-  {
-    "state": "Ohio",
-    "population": 11694664
-  },
-  {
-    "state": "Georgia",
-    "population": 10545138
-  },
-  {
-    "state": "North Carolina",
-    "population": 10390149
-  },
-  {
-    "state": "Michigan",
-    "population": 9991177
-  },
-  {
-    "state": "New Jersey",
-    "population": 9032872
-  },
-  {
-    "state": "Virginia",
-    "population": 8525660
-  },
-  {
-    "state": "Washington",
-    "population": 7530552
-  },
-  {
-    "state": "Arizona",
-    "population": 7123898
-  },
-  {
-    "state": "Massachusetts",
-    "population": 6895917
-  },
-  {
-    "state": "Tennessee",
-    "population": 6782564
-  },
-  {
-    "state": "Indiana",
-    "population": 6699629
-  },
-  {
-    "state": "Missouri",
-    "population": 6135888
-  },
-  {
-    "state": "Maryland",
-    "population": 6079602
-  },
-  {
-    "state": "Wisconsin",
-    "population": 5818049
-  },
-  {
-    "state": "Colorado",
-    "population": 5684203
-  },
-  {
-    "state": "Minnesota",
-    "population": 5628162
-  },
-  {
-    "state": "South Carolina",
-    "population": 5088916
-  },
-  {
-    "state": "Alabama",
-    "population": 4888949
-  },
-  {
-    "state": "Louisiana",
-    "population": 4682509
-  },
-  {
-    "state": "Kentucky",
-    "population": 4472265
-  },
-  {
-    "state": "Oregon",
-    "population": 4199563
-  },
-  {
-    "state": "Oklahoma",
-    "population": 3940521
-  },
-  {
-    "state": "Connecticut",
-    "population": 3588683
-  },
-  {
-    "state": "Iowa",
-    "population": 3160553
-  },
-  {
-    "state": "Utah",
-    "population": 3159345
-  },
-  {
-    "state": "Nevada",
-    "population": 3056824
-  },
-  {
-    "state": "Arkansas",
-    "population": 3020327
-  },
-  {
-    "state": "Mississippi",
-    "population": 2982785
-  },
-  {
-    "state": "Kansas",
-    "population": 2918515
-  },
-  {
-    "state": "New Mexico",
-    "population": 2090708
-  },
-  {
-    "state": "Nebraska",
-    "population": 1932549
-  },
-  {
-    "state": "West Virginia",
-    "population": 1803077
-  },
-  {
-    "state": "Idaho",
-    "population": 1753860
-  },
-  {
-    "state": "Hawaii",
-    "population": 1426393
-  },
-  {
-    "state": "New Hampshire",
-    "population": 1350575
-  },
-  {
-    "state": "Maine",
-    "population": 1341582
-  },
-  {
-    "state": "Montana",
-    "population": 1062330
-  },
-  {
-    "state": "Rhode Island",
-    "population": 1061712
-  },
-  {
-    "state": "Delaware",
-    "population": 971180
-  },
-  {
-    "state": "South Dakota",
-    "population": 877790
-  },
-  {
-    "state": "North Dakota",
-    "population": 755238
-  },
-  {
-    "state": "Alaska",
-    "population": 738068
-  },
-  {
-    "state": "District of Columbia",
-    "population": 703608
-  },
-  {
-    "state": "Vermont",
-    "population": 623960
-  },
-  {
-    "state": "Wyoming",
-    "population": 573720
-  }
-];
+export default {
+  California: 39776830,
+  Texas: 28704330,
+  Florida: 21312211,
+  'New York': 19862512,
+  Pennsylvania: 12823989,
+  Illinois: 12768320,
+  Ohio: 11694664,
+  Georgia: 10545138,
+  'North Carolina': 10390149,
+  Michigan: 9991177,
+  'New Jersey': 9032872,
+  Virginia: 8525660,
+  Washington: 7530552,
+  Arizona: 7123898,
+  Massachusetts: 6895917,
+  Tennessee: 6782564,
+  Indiana: 6699629,
+  Missouri: 6135888,
+  Maryland: 6079602,
+  Wisconsin: 5818049,
+  Colorado: 5684203,
+  Minnesota: 5628162,
+  'South Carolina': 5088916,
+  Alabama: 4888949,
+  Louisiana: 4682509,
+  Kentucky: 4472265,
+  Oregon: 4199563,
+  Oklahoma: 3940521,
+  Connecticut: 3588683,
+  Iowa: 3160553,
+  Utah: 3159345,
+  Nevada: 3056824,
+  Arkansas: 3020327,
+  Mississippi: 2982785,
+  Kansas: 2918515,
+  'New Mexico': 2090708,
+  Nebraska: 1932549,
+  'West Virginia': 1803077,
+  Idaho: 1753860,
+  Hawaii: 1426393,
+  'New Hampshire': 1350575,
+  Maine: 1341582,
+  Montana: 1062330,
+  'Rhode Island': 1061712,
+  Delaware: 971180,
+  'South Dakota': 877790,
+  'North Dakota': 755238,
+  Alaska: 738068,
+  'District of Columbia': 703608,
+  Vermont: 623960,
+  Wyoming: 573720
+};
