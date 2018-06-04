@@ -1,5 +1,8 @@
 import * as d3 from 'd3';
+import d3Tip from 'd3-tip';
+
 import population from './population';
+import regionsLookup from './regionsLookup';
 
 const bubble = (container, data, title) => {
   // set margins
@@ -67,7 +70,16 @@ const bubble = (container, data, title) => {
           d3.min(d3.values(population)),
           d3.max(d3.values(population))
         ])
-        .range([10,60])
+        .range([5,30]);
+      
+      const fillColor = d3
+        .scaleOrdinal()
+        .domain(['Northeast', 'Midwest', 'South', 'West'])
+        .range(['#324D5C', '#46B29D', '#F0CA4D', '#DE5349']);
+      const strokeColor = d3
+        .scaleOrdinal()
+        .domain(['Northeast', 'Midwest', 'South', 'West'])
+        .range(['#7EC2E8', '#2D7265', '#B09439', '#9E3B34']);
       
       // axis
       const xAxis = d3.axisBottom().scale(xScale);
@@ -80,6 +92,11 @@ const bubble = (container, data, title) => {
         .attr('class', 'axis')
         .attr('transform', 'translate(0, 0)')
         .call(yAxis);
+      
+      const tip = d3Tip()
+        .attr('class', 'd3-tip')
+        .html(d => `${d.geo}:<br>x: ${d.x.rollover}<br>y: ${d.y.rollover}`);
+      svg.call(tip);
 
 
       // generate data pairs
@@ -88,8 +105,8 @@ const bubble = (container, data, title) => {
         const y = yData.find(y => y.geo === x.geo);
         if (y) {
           data.push({
-            x: x.dataValue,
-            y: y.dataValue,
+            x,
+            y,
             geo: x.geo,
             population: population[x.geo]
           });
@@ -103,10 +120,14 @@ const bubble = (container, data, title) => {
         .data(data)
         .enter()
         .append('circle')
-        .attr('cx', d => xScale(d.x))
-        .attr('cy', d => yScale(d.y))
+        .attr('cx', d => xScale(d.x.dataValue))
+        .attr('cy', d => yScale(d.y.dataValue))
         .attr('r', d => bubbleScale(d.population))
-        .style('fill', 'pink');
+        .style('fill', d => fillColor(regionsLookup[d.geo]))
+        .style('stroke', d => strokeColor(regionsLookup[d.geo]))
+        .style('stroke-width', '1px')
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
     }
 
   });
