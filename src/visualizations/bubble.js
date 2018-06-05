@@ -5,6 +5,35 @@ import legend from 'd3-svg-legend';
 import population from './population';
 import regionsLookup from './regionsLookup';
 
+import './bubble.css';
+
+const getTemporalParmeter = temporal => {
+  if (!temporal) {
+    throw new Error('temporal is required');
+  }
+  let preparedTemporal = temporal;
+  // temporal can be either: string (one year YYYY), string (year range YYYY-YYYY), array of strings (years)
+  if (typeof preparedTemporal === 'string' && preparedTemporal.length === 9) {
+    // YYYY-YYYY
+    const [start, stop] = preparedTemporal.split('-');
+    if (start > stop) {
+      throw new Error('data.temporal not valid');
+    }
+    preparedTemporal = [];
+    /*eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }]*/
+    for (let i = start; i <= stop; i++) {
+      preparedTemporal.push(i.toString());
+    }
+  } else if (
+    !Array.isArray(preparedTemporal) &&
+    typeof preparedTemporal === 'string' &&
+    preparedTemporal.length !== 4
+  ) {
+    throw new Error('data.temporal not valid');
+  }
+  return preparedTemporal;
+};
+
 const bubble = (container, data, title) => {
   // set margins
   const top = title ? 50 : 20;
@@ -54,12 +83,14 @@ const bubble = (container, data, title) => {
   }
 
   // prepare urls for json calls
+  const temporal = getTemporalParmeter(data.temporal);
+  const firstYear = Array.isArray(temporal) ? temporal[0] : temporal;
   const xUrl = `https://ephtracking.cdc.gov/apigateway/api/v1/getCoreHolder/${
     data.x.measureId
-  }/1/ALL/ALL/${data.temporal}/${data.x.isSmoothed || 0}/0`;
+  }/1/ALL/ALL/${temporal}/${data.x.isSmoothed || 0}/0`;
   const yUrl = `https://ephtracking.cdc.gov/apigateway/api/v1/getCoreHolder/${
     data.y.measureId
-  }/1/ALL/ALL/${data.temporal}/${data.y.isSmoothed || 0}/0`;
+  }/1/ALL/ALL/${temporal}/${data.y.isSmoothed || 0}/0`;
 
   // get data asynchronously
   const q = d3.queue();
@@ -84,16 +115,16 @@ const bubble = (container, data, title) => {
       const xScale = d3
         .scaleLinear()
         .domain([
-          d3.min(xData, d => d.dataValue),
-          d3.max(xData, d => d.dataValue)
+          d3.min(xData, d => parseFloat(d.dataValue)),
+          d3.max(xData, d => parseFloat(d.dataValue))
         ])
         .range([0, width]);
 
       const yScale = d3
         .scaleLinear()
         .domain([
-          d3.min(yData, d => d.dataValue),
-          d3.max(yData, d => d.dataValue)
+          d3.min(yData, d => parseFloat(d.dataValue)),
+          d3.max(yData, d => parseFloat(d.dataValue))
         ])
         .range([height, 0]);
 
@@ -135,42 +166,27 @@ const bubble = (container, data, title) => {
       // generate data pairs
       let data = [];
       xData.map(x => {
-        const y = yData.find(y => y.geo === x.geo);
+        const y = yData.find(y => y.geo === x.geo && y.year === x.year);
         if (y) {
           data.push({
             x,
             y,
             geo: x.geo,
-            population: population[x.geo]
+            population: population[x.geo],
+            year: x.year
           });
         }
       });
       console.log(data);
 
-      // draw circle
-      const node = g
-        .selectAll('circle')
-        .data(data)
-        .enter()
-        .append('circle')
-        .attr('cx', d => xScale(d.x.dataValue))
-        .attr('cy', d => yScale(d.y.dataValue))
-        .attr('class', d => `ephviz-${regionsLookup[d.geo]}`) // for highlighting when hovering over legend
-        .attr('r', d => bubbleScale(d.population))
-        .style('fill', d => fillColor(regionsLookup[d.geo]))
-        .style('stroke', d => strokeColor(regionsLookup[d.geo]))
-        .style('stroke-width', '1px')
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide);
-
       // create legend
       svg
         .append('g')
         .attr('class', 'legendOrdinal')
-        .attr('transform', `translate(${width + margin.left + 10}, ${margin.top})`);
+        .attr('transform', `translate(${width + margin.left + 12}, ${margin.top})`);
       const legendOrdinal = legend
         .legendColor()
-        .title('Legend')
+        .title(firstYear)
         .classPrefix('ephviz-')
         .scale(fillColor)
         // highlight the mousover region
@@ -192,6 +208,69 @@ const bubble = (container, data, title) => {
           })
         });
       svg.select('.legendOrdinal').call(legendOrdinal);
+
+      // draw circle
+      const dot = g
+        .selectAll('circle')
+        .data(data)
+        .enter()
+        .filter(d => d.x.year === firstYear)
+        .append('circle')
+        .attr('cx', d => xScale(parseFloat(d.x.dataValue)))
+        .attr('cy', d => yScale(parseFloat(d.y.dataValue)))
+        .attr('class', d => `ephviz-${regionsLookup[d.geo]}`) // for highlighting when hovering over legend
+        .attr('r', d => bubbleScale(d.population))
+        .style('fill', d => fillColor(regionsLookup[d.geo]))
+        .style('stroke', d => strokeColor(regionsLookup[d.geo]))
+        .style('stroke-width', '1px')
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
+      
+      // animate dots
+      const updateDots = year => {
+        console.log(year);
+        dot
+          .transition()
+          .duration(750)
+          // ToDo: Improve
+          .attr('cx', d => xScale(parseFloat(data.find(e => e.year === year && e.geo === d.geo).x.dataValue)))
+          .attr('cy', d => yScale(parseFloat(data.find(e => e.year === year && e.geo === d.geo).y.dataValue)));
+        
+        d3.select('.ephviz-legendTitle').text(year);
+      }
+      let i = 1;
+      const startAnimation = () => {
+        svg.selectAll('.replay').remove();
+        let intervalId = setInterval(() => {
+          updateDots(temporal[i]);
+          i++;
+          if (i === temporal.length) {
+            clearInterval(intervalId);
+            i=1;
+            // add replay link
+            g
+              .append('text')
+              .attr('class', 'replay')
+              .attr('x', width + 29)
+              .attr('y', 5 + d3.select('.legendOrdinal').node().getBoundingClientRect().height)
+              .attr('text-anchor', 'middle')
+              .style('fill', 'darkblue')
+              .attr('font-family', 'Verdana, Geneva, sans-serif')
+              .attr('font-size', '12px')
+              .text('Replay')
+              .on('click', () => {
+                updateDots(temporal[0]); // immediately run the first one
+                startAnimation();
+              });
+          }
+        }, 1500);
+      }
+
+      if (Array.isArray(temporal)) {
+        startAnimation();
+      }
+
+      
     }
   });
 };
