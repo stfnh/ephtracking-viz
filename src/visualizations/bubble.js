@@ -18,6 +18,17 @@ const bubble = (container, data, title) => {
     .append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
+  if (title) {
+    svg
+      .append('text')
+      .attr('x', svg.attr('width') / 2)
+      .attr('y', margin.top / 2)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Verdana, Geneva, sans-serif')
+      .attr('font-size', '14px')
+      .text(title);
+  }
+
   // prepare urls for json calls
   const xUrl = `https://ephtracking.cdc.gov/apigateway/api/v1/getCoreHolder/${
     data.x.measureId
@@ -45,8 +56,6 @@ const bubble = (container, data, title) => {
         .attr('font-family', 'monospace')
         .text('no data');
     } else {
-      console.log('done', xData, yData, population);
-
       // scales
       const xScale = d3
         .scaleLinear()
@@ -70,13 +79,14 @@ const bubble = (container, data, title) => {
         .range([5, 30]);
 
       // fill regions
+      const regions = ['Northeast', 'Midwest', 'South', 'West']
       const fillColor = d3
         .scaleOrdinal()
-        .domain(['Northeast', 'Midwest', 'South', 'West'])
+        .domain(regions)
         .range(['#324D5C', '#46B29D', '#F0CA4D', '#DE5349']);
       const strokeColor = d3
         .scaleOrdinal()
-        .domain(['Northeast', 'Midwest', 'South', 'West'])
+        .domain(regions)
         .range(['#7EC2E8', '#2D7265', '#B09439', '#9E3B34']);
 
       // axis
@@ -95,7 +105,7 @@ const bubble = (container, data, title) => {
 
       const tip = d3Tip()
         .attr('class', 'd3-tip')
-        .html(d => `${d.geo}:<br>x: ${d.x.rollover}<br>y: ${d.y.rollover}`);
+        .html(d => `${d.geo}:<br>x: ${d.x.rollover[0]}<br>y: ${d.y.rollover[0]}`);
       svg.call(tip);
 
       // generate data pairs
@@ -121,6 +131,7 @@ const bubble = (container, data, title) => {
         .append('circle')
         .attr('cx', d => xScale(d.x.dataValue))
         .attr('cy', d => yScale(d.y.dataValue))
+        .attr('class', d => `ephviz-${regionsLookup[d.geo]}`) // for highlighting when hovering over legend
         .attr('r', d => bubbleScale(d.population))
         .style('fill', d => fillColor(regionsLookup[d.geo]))
         .style('stroke', d => strokeColor(regionsLookup[d.geo]))
@@ -132,12 +143,30 @@ const bubble = (container, data, title) => {
       svg
         .append('g')
         .attr('class', 'legendOrdinal')
-        .attr('transform', `translate(${width + margin.left + 10}, 20)`);
+        .attr('transform', `translate(${width + margin.left + 10}, ${margin.top})`);
       const legendOrdinal = legend
         .legendColor()
         .title('Legend')
-        .scale(fillColor);
-
+        .classPrefix('ephviz-')
+        .scale(fillColor)
+        // highlight the mousover region
+        .on('cellover', d => {
+          regions
+            .filter(r => r !== d)
+            .forEach(region => {
+              d3
+                .selectAll(`.ephviz-${region}`)
+                .style('opacity', 0.10);
+            })
+        })
+        .on('cellout', d => {
+        regions
+          .forEach(region => {
+            d3
+              .selectAll(`.ephviz-${region}`)
+              .style('opacity', null);
+          })
+        });
       svg.select('.legendOrdinal').call(legendOrdinal);
     }
   });
