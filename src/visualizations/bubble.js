@@ -14,10 +14,13 @@ const bubble = (container, data, title) => {
   const svg = d3.select(container);
   const width = +svg.attr('width') - margin.left - margin.right;
   const height = +svg.attr('height') - margin.top - margin.bottom;
+
+  // the group for the actual bubble chart
   const g = svg
     .append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
+  // create title and axis labels
   if (title) {
     svg
       .append('text')
@@ -27,6 +30,27 @@ const bubble = (container, data, title) => {
       .attr('font-family', 'Verdana, Geneva, sans-serif')
       .attr('font-size', '14px')
       .text(title);
+  }
+  if (data.x.title) {
+    g
+      .append('text')
+      .attr('x', width)
+      .attr('y', height - 5)
+      .attr('font-size', '11px')
+      .attr('fill', 'grey')
+      .attr('text-anchor', 'end')
+      .text(data.x.title);
+  }
+  if (data.y.title) {
+    g
+      .append('text')
+      .attr('x', 0)
+      .attr('y', 15)
+      .attr('font-size', '11px')
+      .attr('fill', 'grey')
+      .attr('text-anchor', 'end')
+      .attr('transform', 'rotate(-90)')
+      .text(data.y.title);
   }
 
   // prepare urls for json calls
