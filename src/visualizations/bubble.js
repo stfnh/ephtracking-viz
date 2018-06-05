@@ -31,7 +31,7 @@ const bubble = (container, data, title) => {
       .attr('font-size', '14px')
       .text(title);
   }
-  if (data.x.title) {
+  if (data.x.label) {
     g
       .append('text')
       .attr('x', width)
@@ -39,9 +39,9 @@ const bubble = (container, data, title) => {
       .attr('font-size', '11px')
       .attr('fill', 'grey')
       .attr('text-anchor', 'end')
-      .text(data.x.title);
+      .text(data.x.label);
   }
-  if (data.y.title) {
+  if (data.y.label) {
     g
       .append('text')
       .attr('x', 0)
@@ -50,7 +50,7 @@ const bubble = (container, data, title) => {
       .attr('fill', 'grey')
       .attr('text-anchor', 'end')
       .attr('transform', 'rotate(-90)')
-      .text(data.y.title);
+      .text(data.y.label);
   }
 
   // prepare urls for json calls
