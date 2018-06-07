@@ -104,6 +104,8 @@ const bubble = (container, data, title) => {
 
     const xData = xResponse && xResponse[xResponse.tableReturnType];
     const yData = yResponse && yResponse[yResponse.tableReturnType];
+    console.log(xData);
+    console.log(yData);
 
     if (!xData || !yData || xData.length === 0 || yData.length === 0) {
       g
@@ -216,10 +218,23 @@ const bubble = (container, data, title) => {
         .enter()
         .filter(d => d.x.year === firstYear)
         .append('circle')
-        .attr('cx', d => xScale(parseFloat(d.x.dataValue)))
-        .attr('cy', d => yScale(parseFloat(d.y.dataValue)))
+        .attr('cx', d => {
+          if (d.x.dataValue) {
+            return xScale(parseFloat(d.x.dataValue));
+          }
+         })
+        .attr('cy', d => {
+          if (d.y.dataValue) {
+            return yScale(parseFloat(d.y.dataValue));
+          }
+         })
         .attr('class', d => `ephviz-${regionsLookup[d.geo]}`) // for highlighting when hovering over legend
         .attr('r', d => bubbleScale(d.population))
+        // .style('display', d => {
+        //   if (!d.x.dataValue || !d.y.dataValue) {
+        //     return 'none';
+        //   }
+        // })
         .style('fill', d => fillColor(regionsLookup[d.geo]))
         .style('stroke', d => strokeColor(regionsLookup[d.geo]))
         .style('stroke-width', '1px')
@@ -228,13 +243,32 @@ const bubble = (container, data, title) => {
       
       // animate dots
       const updateDots = year => {
-        console.log(year);
         dot
           .transition()
           .duration(750)
           // ToDo: Improve
-          .attr('cx', d => xScale(parseFloat(data.find(e => e.year === year && e.geo === d.geo).x.dataValue)))
-          .attr('cy', d => yScale(parseFloat(data.find(e => e.year === year && e.geo === d.geo).y.dataValue)));
+          .attr('cx', d => {
+            const foundElement = data.find(e => e.year === year && e.geo === d.geo);
+            if (foundElement && foundElement.x.dataValue) {
+              return xScale(foundElement.x.dataValue);
+            }
+            return null;
+          })
+          .attr('cy', d => {
+            const foundElement = data.find(e => e.year === year && e.geo === d.geo);
+            if (foundElement && foundElement.y.dataValue) {
+              return yScale(foundElement.y.dataValue);
+            }
+            return null;
+          });
+          // .style('display', d => {
+          //   const foundElement = data.find(e => e.year === year && e.geo === d.geo);
+          //   if (!foundElement || !foundElement.x.dataValue || !foundElement.y.dataValue) {
+          //     return 'none';
+          //   } else {
+          //     return null;
+          //   }
+          // })
         
         d3.select('.ephviz-legendTitle').text(year);
       }
