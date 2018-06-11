@@ -104,8 +104,6 @@ const bubble = (container, data, title) => {
 
     const xData = xResponse && xResponse[xResponse.tableReturnType];
     const yData = yResponse && yResponse[yResponse.tableReturnType];
-    console.log(xData);
-    console.log(yData);
 
     if (!xData || !yData || xData.length === 0 || yData.length === 0) {
       g
@@ -162,23 +160,19 @@ const bubble = (container, data, title) => {
 
       const tip = d3Tip()
         .attr('class', 'd3-tip')
-        .html(d => `${d.geo}:<br>x: ${d.x.rollover[0]}<br>y: ${d.y.rollover[0]}`);
+        .html(d => `${d.geo}`);
       svg.call(tip);
 
       // generate data pairs
-      let data = [];
-      xData.map(x => {
-        const y = yData.find(y => y.geo === x.geo && y.year === x.year);
-        if (y) {
-          data.push({
-            x,
-            y,
-            geo: x.geo,
-            population: population[x.geo],
-            year: x.year
-          });
-        }
-      });
+      let data = Object
+        .keys(population)
+        .map(state => {
+          const entry = { population: population[state], geo: state, x: {}, y: {} };
+          // substr: five year period
+          xData.filter(e => e.geo === state).forEach(e => entry.x[e.year.substr(e.year.length - 4)] = e);
+          yData.filter(e => e.geo === state).forEach(e => entry.y[e.year.substr(e.year.length - 4)] = e);
+          return entry
+        });
       console.log(data);
 
       // create legend
@@ -216,28 +210,33 @@ const bubble = (container, data, title) => {
         .selectAll('circle')
         .data(data)
         .enter()
-        .filter(d => d.x.year === firstYear)
         .append('circle')
         .attr('cx', d => {
-          if (d.x.dataValue) {
-            return xScale(parseFloat(d.x.dataValue));
+          if (d.x[firstYear] && parseFloat(d.x[firstYear].dataValue)
+            && d.y[firstYear] && parseFloat(d.y[firstYear].value)) {
+            return xScale(parseFloat(d.x[firstYear].dataValue));
           }
+          return width / 2;
          })
         .attr('cy', d => {
-          if (d.y.dataValue) {
-            return yScale(parseFloat(d.y.dataValue));
+          if (d.x[firstYear] && parseFloat(d.x[firstYear].dataValue)
+          && d.y[firstYear] && parseFloat(d.y[firstYear].value)) {
+            return yScale(parseFloat(d.y[firstYear].dataValue));
           }
+          return height / 2;
          })
         .attr('class', d => `ephviz-${regionsLookup[d.geo]}`) // for highlighting when hovering over legend
         .attr('r', d => bubbleScale(d.population))
-        // .style('display', d => {
-        //   if (!d.x.dataValue || !d.y.dataValue) {
-        //     return 'none';
-        //   }
-        // })
         .style('fill', d => fillColor(regionsLookup[d.geo]))
         .style('stroke', d => strokeColor(regionsLookup[d.geo]))
         .style('stroke-width', '1px')
+        .style('display', d => {
+          if (d.x[firstYear] && parseFloat(d.x[firstYear].dataValue)
+          && d.y[firstYear] && parseFloat(d.y[firstYear].value)) {
+            return null;
+          }
+          return 'none';
+        })
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide);
       
@@ -246,29 +245,27 @@ const bubble = (container, data, title) => {
         dot
           .transition()
           .duration(750)
-          // ToDo: Improve
           .attr('cx', d => {
-            const foundElement = data.find(e => e.year === year && e.geo === d.geo);
-            if (foundElement && foundElement.x.dataValue) {
-              return xScale(foundElement.x.dataValue);
+            if (d.x[year] && parseFloat(d.x[year].dataValue)
+            && d.y[year] && parseFloat(d.y[year].dataValue)) {
+              return xScale(parseFloat(d.x[year].dataValue));
             }
-            return null;
+            return width / 2;
           })
           .attr('cy', d => {
-            const foundElement = data.find(e => e.year === year && e.geo === d.geo);
-            if (foundElement && foundElement.y.dataValue) {
-              return yScale(foundElement.y.dataValue);
+            if (d.x[year] && parseFloat(d.x[year].dataValue)
+            && d.y[year] && parseFloat(d.y[year].dataValue)) {
+              return yScale(parseFloat(d.y[year].dataValue));
             }
-            return null;
+            return height / 2;
+          })
+          .style('display', d => {
+            if (d.x[year] && parseFloat(d.x[year].dataValue)
+            && d.y[year] && parseFloat(d.y[year].dataValue)) {
+              return null;
+            }
+            return 'none';
           });
-          // .style('display', d => {
-          //   const foundElement = data.find(e => e.year === year && e.geo === d.geo);
-          //   if (!foundElement || !foundElement.x.dataValue || !foundElement.y.dataValue) {
-          //     return 'none';
-          //   } else {
-          //     return null;
-          //   }
-          // })
         
         d3.select('.ephviz-legendTitle').text(year);
       }
@@ -286,7 +283,7 @@ const bubble = (container, data, title) => {
               .append('text')
               .attr('class', 'replay')
               .attr('x', width + 29)
-              .attr('y', 5 + d3.select('.legendOrdinal').node().getBoundingClientRect().height)
+              .attr('y', 102)
               .attr('text-anchor', 'middle')
               .style('fill', 'darkblue')
               .attr('font-family', 'Verdana, Geneva, sans-serif')
