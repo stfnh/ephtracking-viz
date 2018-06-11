@@ -56,7 +56,7 @@ Call the visualization library:
   var options = {
 
     // required
-    // select type of visualization ('line-chart' or 'choropleth')
+    // select type of visualization ('line-chart' or 'choropleth' or 'bubble')
     type: 'line-chart',
 
     // add a title to the chart, optional but recommended
