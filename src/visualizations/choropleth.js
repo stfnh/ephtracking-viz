@@ -364,6 +364,7 @@ const choropleth = (container, data, title, showLegend = true, breakGroups = 8, 
               .attr('x', 30)
               .attr('y', margin.top / 2)
               .attr('text-anchor', 'middle')
+              .style('fill', 'darkblue')
               .attr('font-family', 'Verdana, Geneva, sans-serif')
               .attr('font-size', '12px')
               .text('Replay')
