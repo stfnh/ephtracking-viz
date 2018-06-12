@@ -205,6 +205,7 @@ const bubble = (container, data, title) => {
         });
       svg.select('.legendOrdinal').call(legendOrdinal);
 
+      console.log(firstYear);
       // draw circle
       const dot = g
         .selectAll('circle')
@@ -213,14 +214,14 @@ const bubble = (container, data, title) => {
         .append('circle')
         .attr('cx', d => {
           if (d.x[firstYear] && parseFloat(d.x[firstYear].dataValue)
-            && d.y[firstYear] && parseFloat(d.y[firstYear].value)) {
+            && d.y[firstYear] && parseFloat(d.y[firstYear].dataValue)) {
             return xScale(parseFloat(d.x[firstYear].dataValue));
           }
           return width / 2;
          })
         .attr('cy', d => {
           if (d.x[firstYear] && parseFloat(d.x[firstYear].dataValue)
-          && d.y[firstYear] && parseFloat(d.y[firstYear].value)) {
+          && d.y[firstYear] && parseFloat(d.y[firstYear].dataValue)) {
             return yScale(parseFloat(d.y[firstYear].dataValue));
           }
           return height / 2;
@@ -232,7 +233,7 @@ const bubble = (container, data, title) => {
         .style('stroke-width', '1px')
         .style('display', d => {
           if (d.x[firstYear] && parseFloat(d.x[firstYear].dataValue)
-          && d.y[firstYear] && parseFloat(d.y[firstYear].value)) {
+          && d.y[firstYear] && parseFloat(d.y[firstYear].dataValue)) {
             return null;
           }
           return 'none';
