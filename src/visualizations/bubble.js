@@ -173,7 +173,6 @@ const bubble = (container, data, title) => {
           yData.filter(e => e.geo === state).forEach(e => entry.y[e.year.substr(e.year.length - 4)] = e);
           return entry
         });
-      console.log(data);
 
       // create legend
       svg
@@ -205,7 +204,6 @@ const bubble = (container, data, title) => {
         });
       svg.select('.legendOrdinal').call(legendOrdinal);
 
-      console.log(firstYear);
       // draw circle
       const dot = g
         .selectAll('circle')
